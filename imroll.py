@@ -39,29 +39,69 @@ class ImRoll:
             rolls.konachan_get(self, ctx, server, channel, lock),
         )
 
-        @commands.command(pass_context=True, no_pm=True)
-        async def imrollf(self, ctx, *text):
-            server = ctx.message.server
-            channel = ctx.message.channel
-            self.loliFilters = fileIO("data/loli/filters.json", "load")
-            self.loliSettings = fileIO("data/loli/settings.json", "load")
-            self.danFilters = fileIO("data/dan/filters.json", "load")
-            self.danSettings = fileIO("data/dan/settings.json", "load")
-            self.gelFilters = fileIO("data/gel/filters.json", "load")
-            self.gelSettings = fileIO("data/gel/settings.json", "load")
-            self.konaFilters = fileIO("data/kona/filters.json", "load")
-            self.konaSettings = fileIO("data/kona/settings.json", "load")
+    @commands.command(pass_context=True, no_pm=True)
+    async def imrollf(self, ctx, *text):
+        server = ctx.message.server
+        channel = ctx.message.channel
+        self.loliFilters = fileIO("data/loli/filters.json", "load")
+        self.loliSettings = fileIO("data/loli/settings.json", "load")
+        self.danFilters = fileIO("data/dan/filters.json", "load")
+        self.danSettings = fileIO("data/dan/settings.json", "load")
+        self.gelFilters = fileIO("data/gel/filters.json", "load")
+        self.gelSettings = fileIO("data/gel/settings.json", "load")
+        self.konaFilters = fileIO("data/kona/filters.json", "load")
+        self.konaSettings = fileIO("data/kona/settings.json", "load")
 
-            l1 = asyncio.Lock()
-            l2 = asyncio.Lock()
-            l3 = asyncio.Lock()
-            l4 = asyncio.Lock()
-            await asyncio.gather(
-                rolls.lolibooru_get(self, ctx, server, channel, l1),
-                rolls.danbooru_get(self, ctx, server, channel, l2),
-                rolls.gelbooru_get(self, ctx, server, channel, l3),
-                rolls.konachan_get(self, ctx, server, channel, l4),
-            )
+        l1 = asyncio.Lock()
+        l2 = asyncio.Lock()
+        l3 = asyncio.Lock()
+        l4 = asyncio.Lock()
+        await asyncio.gather(
+            rolls.lolibooru_get(self, ctx, server, channel, l1),
+            rolls.danbooru_get(self, ctx, server, channel, l2),
+            rolls.gelbooru_get(self, ctx, server, channel, l3),
+            rolls.konachan_get(self, ctx, server, channel, l4),
+        )
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def lolirs(self, ctx, *text):
+        server = ctx.message.server
+        channel = ctx.message.channel
+        self.loliFilters = fileIO("data/loli/filters.json", "load")
+        self.loliSettings = fileIO("data/loli/settings.json", "load")
+
+        lock = asyncio.Lock()
+        await rolls.lolibooru_get(self, ctx, server, channel, lock)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def danrs(self, ctx, *text):
+        server = ctx.message.server
+        channel = ctx.message.channel
+        self.danFilters = fileIO("data/dan/filters.json", "load")
+        self.danSettings = fileIO("data/dan/settings.json", "load")
+
+        lock = asyncio.Lock()
+        await rolls.danbooru_get(self, ctx, server, channel, lock)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def gelrs(self, ctx, *text):
+        server = ctx.message.server
+        channel = ctx.message.channel
+        self.gelFilters = fileIO("data/gel/filters.json", "load")
+        self.gelSettings = fileIO("data/gel/settings.json", "load")
+
+        lock = asyncio.Lock()
+        await rolls.gelbooru_get(self, ctx, server, channel, lock)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def konars(self, ctx, *text):
+        server = ctx.message.server
+        channel = ctx.message.channel
+        self.konaFilters = fileIO("data/kona/filters.json", "load")
+        self.konaSettings = fileIO("data/kona/settings.json", "load")
+
+        lock = asyncio.Lock()
+        await rolls.konachan_get(self, ctx, server, channel, lock)
 
 
 def check_folder():
