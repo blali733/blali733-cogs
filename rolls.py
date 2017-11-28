@@ -2,6 +2,7 @@ import aiohttp
 import random
 from urllib import parse
 import discord
+import sys
 
 async def lolibooru_get(self, ctx, server, channel, lock):
     # loliEmbedLink = ""
@@ -147,7 +148,8 @@ async def danbooru_get(self, ctx, server, channel, lock):
         else:
             await self.bot.edit_message(danm1, "Your search terms gave no results.")
     except:
-        await self.bot.edit_message(danm1, "Connection timed out.")
+        type, obj, tb = sys.exc_info()
+        await self.bot.edit_message(danm1, "Connection timed out. {}".join(tb.tb_lineno))
 
 
 async def gelbooru_get(self, ctx, server, channel, lock):
@@ -223,7 +225,10 @@ async def gelbooru_get(self, ctx, server, channel, lock):
         else:
             await self.bot.edit_message(gelm1, "Your search terms gave no results.")
     except:
+        type, obj, tb = sys.exc_info()
+        lin = tb.tb_lineno
         await self.bot.edit_message(gelm1, "Connection timed out.")
+        await self.bot.edit_message(gelm2, lin)
 
 
 async def konachan_get(self, ctx, server, channel, lock):

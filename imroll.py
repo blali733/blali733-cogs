@@ -35,7 +35,7 @@ class ImRoll:
         await asyncio.gather(
             rolls.lolibooru_get(self, ctx, server, channel, lock),
             rolls.danbooru_get(self, ctx, server, channel, lock),
-            rolls.gelbooru_get(self, ctx, server, channel, lock),
+            # rolls.gelbooru_get(self, ctx, server, channel, lock),
             rolls.konachan_get(self, ctx, server, channel, lock),
         )
 
@@ -59,7 +59,7 @@ class ImRoll:
         await asyncio.gather(
             rolls.lolibooru_get(self, ctx, server, channel, l1),
             rolls.danbooru_get(self, ctx, server, channel, l2),
-            rolls.gelbooru_get(self, ctx, server, channel, l3),
+            # rolls.gelbooru_get(self, ctx, server, channel, l3),
             rolls.konachan_get(self, ctx, server, channel, l4),
         )
 
