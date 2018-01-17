@@ -17,6 +17,7 @@ class ImRoll:
         self.gelSettings = fileIO("data/gel/settings.json", "load")
         self.konaFilters = fileIO("data/kona/filters.json", "load")
         self.konaSettings = fileIO("data/kona/settings.json", "load")
+        self.active = fileIO("data/rolls/active.json", "load")
 
     @commands.command(pass_context=True, no_pm=True)
     async def imroll(self, ctx, *text):
@@ -30,13 +31,14 @@ class ImRoll:
         self.gelSettings = fileIO("data/gel/settings.json", "load")
         self.konaFilters = fileIO("data/kona/filters.json", "load")
         self.konaSettings = fileIO("data/kona/settings.json", "load")
+        self.active = fileIO("data/rolls/active.json", "load")
 
         lock = asyncio.Lock()
         await asyncio.gather(
-            rolls.lolibooru_get(self, ctx, server, channel, lock),
-            rolls.danbooru_get(self, ctx, server, channel, lock),
-            rolls.gelbooru_get(self, ctx, server, channel, lock),
-            rolls.konachan_get(self, ctx, server, channel, lock),
+            rolls.lolibooru_get(self, ctx, server, channel, lock) if self.active["loli"] == "true" else dummy(),
+            rolls.danbooru_get(self, ctx, server, channel, lock) if self.active["dan"] == "true" else dummy(),
+            rolls.gelbooru_get(self, ctx, server, channel, lock) if self.active["gel"] == "true" else dummy(),
+            rolls.konachan_get(self, ctx, server, channel, lock) if self.active["kona"] == "true" else dummy(),
         )
 
     @commands.command(pass_context=True, no_pm=True)
@@ -51,17 +53,67 @@ class ImRoll:
         self.gelSettings = fileIO("data/gel/settings.json", "load")
         self.konaFilters = fileIO("data/kona/filters.json", "load")
         self.konaSettings = fileIO("data/kona/settings.json", "load")
+        self.active = fileIO("data/rolls/active.json", "load")
 
         l1 = asyncio.Lock()
         l2 = asyncio.Lock()
         l3 = asyncio.Lock()
         l4 = asyncio.Lock()
         await asyncio.gather(
-            rolls.lolibooru_get(self, ctx, server, channel, l1),
-            rolls.danbooru_get(self, ctx, server, channel, l2),
-            rolls.gelbooru_get(self, ctx, server, channel, l3),
-            rolls.konachan_get(self, ctx, server, channel, l4),
+            rolls.lolibooru_get(self, ctx, server, channel, l1) if self.active["loli"] == "true" else dummy(),
+            rolls.danbooru_get(self, ctx, server, channel, l2) if self.active["dan"] == "true" else dummy(),
+            rolls.gelbooru_get(self, ctx, server, channel, l3) if self.active["gel"] == "true" else dummy(),
+            rolls.konachan_get(self, ctx, server, channel, l4) if self.active["kona"] == "true" else dummy(),
         )
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def getSwitch(self, ctx, *text):
+        self.active = fileIO("data/rolls/active.json", "load")
+        await self.bot.say(self.active)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def loliSwitch(self, ctx, *text):
+        self.active = fileIO("data/rolls/active.json", "load")
+        if self.active["loli"] == "true":
+            self.active["loli"] = "false"
+            await self.bot.say("Loli disabled!")
+        else:
+            self.active["loli"] = "true"
+            await self.bot.say("Loli enabled!")
+        fileIO("data/rolls/active.json", "save", self.active)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def konaSwitch(self, ctx, *text):
+        self.active = fileIO("data/rolls/active.json", "load")
+        if self.active["kona"] == "true":
+            self.active["kona"] = "false"
+            await self.bot.say("Kona(ta) disabled!")
+        else:
+            self.active["kona"] = "true"
+            await self.bot.say("Kona(ta) enabled!")
+        fileIO("data/rolls/active.json", "save", self.active)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def danSwitch(self, ctx, *text):
+        self.active = fileIO("data/rolls/active.json", "load")
+        if self.active["dan"] == "true":
+            self.active["dan"] = "false"
+            await self.bot.say("Dan disabled!")
+        else:
+            self.active["dan"] = "true"
+            await self.bot.say("Dan enabled!")
+        fileIO("data/rolls/active.json", "save", self.active)
+
+    @commands.command(pass_context=True, no_pm=True)
+    async def gelSwitch(self, ctx, *text):
+        self.active = fileIO("data/rolls/active.json", "load")
+        if self.active["gel"] == "true":
+            self.active["gel"] = "false"
+            await self.bot.say("Gel disabled!")
+        else:
+            self.active["gel"] = "true"
+            await self.bot.say("Gel enabled!")
+        fileIO("data/rolls/active.json", "save", self.active)
 
     @commands.command(pass_context=True, no_pm=True)
     async def lolirs(self, ctx, *text):
@@ -104,6 +156,10 @@ class ImRoll:
         await rolls.konachan_get(self, ctx, server, channel, lock)
 
 
+async def dummy():
+    pass
+
+
 def check_folder():
     if not os.path.exists("data/loli"):
         print("Creating data/loli folder...")
@@ -117,6 +173,17 @@ def check_folder():
     if not os.path.exists("data/kona"):
         print("Creating data/kona folder...")
         os.makedirs("data/kona")
+    if not os.path.exists("data/rolls"):
+        print("Creating data/rolls folder...")
+        os.makedirs("data/rolls")
+
+
+def set_activity():
+    activity = {"loli": "true", "kona": "true", "gel": "true", "dan": "true"}
+
+    if not fileIO("data/rolls/active.json", "check"):
+        print("Creating default loli filters.json...")
+        fileIO("data/rolls/active.json", "save", activity)
 
 
 def check_files():
@@ -184,5 +251,6 @@ def check_files():
 
 def setup(bot):
     check_folder()
+    set_activity()
     check_files()
     bot.add_cog(ImRoll(bot))
