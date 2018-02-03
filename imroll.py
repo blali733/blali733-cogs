@@ -13,16 +13,12 @@ from __main__ import send_cmd_help
 class ImRoll:
     def __init__(self, bot):
         self.bot = bot
-        self.loliFilters = fileIO("data/rolls/loli_filters.json", "load")
-        self.loliSettings = fileIO("data/rolls/loli_settings.json", "load")
-        self.danFilters = fileIO("data/rolls/dan_filters.json", "load")
-        self.danSettings = fileIO("data/rolls/dan_settings.json", "load")
-        self.gelFilters = fileIO("data/rolls/gel_filters.json", "load")
-        self.gelSettings = fileIO("data/rolls/gel_settings.json", "load")
-        self.konaFilters = fileIO("data/rolls/kona_filters.json", "load")
-        self.konaSettings = fileIO("data/rolls/kona_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
 
+    # TODO fix this region:
+    # region Filters and settings
     @commands.group(pass_context=True)
     async def imlolifilter(self, ctx):
         """Manages loli filters
@@ -146,19 +142,14 @@ class ImRoll:
         self.settings["maxfilters"] = maxfilters
         fileIO("data/rolls/loli_settings.json", "save", self.settings)
         await self.bot.say("Maximum filters allowed per server for loli set to '{}'.".format(maxfilters))
+    # endregion
 
     @commands.command(pass_context=True, no_pm=True)
     async def imroll(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.loliFilters = fileIO("data/rolls/loli_filters.json", "load")
-        self.loliSettings = fileIO("data/rolls/loli_settings.json", "load")
-        self.danFilters = fileIO("data/rolls/dan_filters.json", "load")
-        self.danSettings = fileIO("data/rolls/dan_settings.json", "load")
-        self.gelFilters = fileIO("data/rolls/gel_filters.json", "load")
-        self.gelSettings = fileIO("data/rolls/gel_settings.json", "load")
-        self.konaFilters = fileIO("data/rolls/kona_filters.json", "load")
-        self.konaSettings = fileIO("data/rolls/kona_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
 
         lock = asyncio.Lock()
@@ -173,14 +164,8 @@ class ImRoll:
     async def imrollf(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.loliFilters = fileIO("data/rolls/loli_filters.json", "load")
-        self.loliSettings = fileIO("data/rolls/loli_settings.json", "load")
-        self.danFilters = fileIO("data/rolls/dan_filters.json", "load")
-        self.danSettings = fileIO("data/rolls/dan_settings.json", "load")
-        self.gelFilters = fileIO("data/rolls/gel_filters.json", "load")
-        self.gelSettings = fileIO("data/rolls/gel_settings.json", "load")
-        self.konaFilters = fileIO("data/rolls/kona_filters.json", "load")
-        self.konaSettings = fileIO("data/rolls/kona_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
 
         l1 = asyncio.Lock()
@@ -199,6 +184,7 @@ class ImRoll:
         self.active = fileIO("data/rolls/active.json", "load")
         await self.bot.say(self.active)
 
+    # region Switches
     @commands.command(pass_context=True, no_pm=True)
     async def loliSwitch(self, ctx, *text):
         self.active = fileIO("data/rolls/active.json", "load")
@@ -242,13 +228,14 @@ class ImRoll:
             self.active["gel"] = "true"
             await self.bot.say("Gel enabled!")
         fileIO("data/rolls/active.json", "save", self.active)
+    # endregion
 
     @commands.command(pass_context=True, no_pm=True)
     async def lolirs(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.loliFilters = fileIO("data/rolls/loli_filters.json", "load")
-        self.loliSettings = fileIO("data/rolls/loli_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
 
         lock = asyncio.Lock()
         await rolls.lolibooru_get(self, ctx, server, channel, lock)
@@ -257,8 +244,8 @@ class ImRoll:
     async def danrs(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.danFilters = fileIO("data/rolls/dan_filters.json", "load")
-        self.danSettings = fileIO("data/rolls/dan_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
 
         lock = asyncio.Lock()
         await rolls.danbooru_get(self, ctx, server, channel, lock)
@@ -267,8 +254,8 @@ class ImRoll:
     async def gelrs(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.gelFilters = fileIO("data/rolls/gel_filters.json", "load")
-        self.gelSettings = fileIO("data/rolls/gel_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
 
         lock = asyncio.Lock()
         await rolls.gelbooru_get(self, ctx, server, channel, lock)
@@ -277,8 +264,8 @@ class ImRoll:
     async def konars(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.konaFilters = fileIO("data/rolls/kona_filters.json", "load")
-        self.konaSettings = fileIO("data/rolls/kona_settings.json", "load")
+        self.filters = fileIO("data/rolls/filters.json", "load")
+        self.settings = fileIO("data/rolls/settings.json", "load")
 
         lock = asyncio.Lock()
         await rolls.konachan_get(self, ctx, server, channel, lock)
@@ -303,69 +290,22 @@ def set_activity():
 
 
 def check_files():
-    loliFilters = {"default": ["rating:safe"]}
-    loliSettings = {"maxfilters": "50"}
-    danFilters = {"default": ["rating:safe"]}
-    danSettings = {"username": "", "api_key": "", "maxfilters": "10"}
-    gelFilters = {"default": ["rating:safe"]}
-    gelSettings = {"maxfilters": "50"}
-    konaFilters = {"default": ["rating:safe"]}
-    konaSettings = {"username": "", "api_key": "", "maxfilters": "10"}
-
-    # TODO make it shorter!
+    filters = {"default": (["rating:safe"], ["rating:safe"], ["rating:safe"], ["rating:safe"])}
+    settings = {"maxfilters": ("50", "10", "50", "50")}
 
     # region File checking
-    if not fileIO("data/rolls/loli_filters.json", "check"):
-        print("Creating default loli filters.json...")
-        fileIO("data/rolls/loli_filters.json", "save", loliFilters)
+    if not fileIO("data/rolls/filters.json", "check"):
+        print("Creating default filters.json...")
+        fileIO("data/rolls/filters.json", "save", filters)
     else:
-        loliFilterlist = fileIO("data/rolls/loli_filters.json", "load")
-        if "default" not in loliFilterlist:
-            loliFilterlist["default"] = loliFilters["default"]
-            print("Adding default loli filters...")
-            fileIO("data/rolls/loli_filters.json", "save", loliFilterlist)
-    if not fileIO("data/rolls/loli_settings.json", "check"):
-        print("Creating default loli settings.json...")
-        fileIO("data/rolls/loli_settings.json", "save", loliSettings)
-
-    if not fileIO("data/rolls/dan_filters.json", "check"):
-        print("Creating default dan filters.json...")
-        fileIO("data/rolls/dan_filters.json", "save", danFilters)
-    else:
-        danFilterlist = fileIO("data/rolls/dan_filters.json", "load")
-        if "default" not in danFilterlist:
-            danFilterlist["default"] = danFilters["default"]
-            print("Adding default dan filters...")
-            fileIO("data/rolls/dan_filters.json", "save", danFilterlist)
-    if not fileIO("data/rolls/dan_settings.json", "check"):
-        print("Creating default dan settings.json...")
-        fileIO("data/rolls/dan_settings.json", "save", danSettings)
-
-    if not fileIO("data/rolls/gel_filters.json", "check"):
-        print("Creating default gel filters.json...")
-        fileIO("data/rolls/gel_filters.json", "save", gelFilters)
-    else:
-        gelFilterlist = fileIO("data/rolls/gel_filters.json", "load")
-        if "default" not in gelFilterlist:
-            gelFilterlist["default"] = gelFilters["default"]
-            print("Adding default gel filters...")
-            fileIO("data/rolls/gel_filters.json", "save", gelFilterlist)
-    if not fileIO("data/rolls/gel_settings.json", "check"):
-        print("Creating default gel settings.json...")
-        fileIO("data/rolls/gel_settings.json", "save", gelSettings)
-
-    if not fileIO("data/rolls/kona_filters.json", "check"):
-        print("Creating default kona filters.json...")
-        fileIO("data/rolls/kona_filters.json", "save", konaFilters)
-    else:
-        konaFilterlist = fileIO("data/rolls/kona_filters.json", "load")
-        if "default" not in konaFilterlist:
-            konaFilterlist["default"] = konaFilters["default"]
-            print("Adding default kona filters...")
-            fileIO("data/rolls/kona_filters.json", "save", konaFilterlist)
-    if not fileIO("data/rolls/kona_settings.json", "check"):
-        print("Creating default kona settings.json...")
-        fileIO("data/rolls/kona_settings.json", "save", konaSettings)
+        filterlist = fileIO("data/rolls/filters.json", "load")
+        if "default" not in filterlist:
+            filterlist["default"] = filters["default"]
+            print("Adding default filters...")
+            fileIO("data/rolls/filters.json", "save", filterlist)
+    if not fileIO("data/rolls/settings.json", "check"):
+        print("Creating default settings.json...")
+        fileIO("data/rolls/settings.json", "save", settings)
     # endregion
 
 
