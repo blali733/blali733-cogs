@@ -4,6 +4,7 @@ from urllib import parse
 import discord
 import sys
 
+
 async def lolibooru_get(self, ctx, server, channel, lock):
     # loliEmbedLink = ""
     # loliEmbedTitle = ""
@@ -17,9 +18,9 @@ async def lolibooru_get(self, ctx, server, channel, lock):
 
     # Assign tags to URL
     if server.id in self.loliFilters:
-        loliTagSearch += " ".join(self.loliFilters[server.id])
+        loliTagSearch += " ".join(self.filters[server.id][0])
     else:
-        loliTagSearch += " ".join(self.loliFilters["default"])
+        loliTagSearch += " ".join(self.filters["default"][0])
 
     # Randomize results
     loliTagSearch += " order:random"
@@ -86,9 +87,9 @@ async def danbooru_get(self, ctx, server, channel, lock):
 
     # Assign tags to URL
     if server.id in self.danFilters:
-        danTagSearch += " ".join(self.danFilters[server.id])
+        danTagSearch += " ".join(self.filters[server.id][1])
     else:
-        danTagSearch += " ".join(self.danFilters["default"])
+        danTagSearch += " ".join(self.filters["default"][1])
     danSearch += parse.quote_plus(danTagSearch)
 
     # Randomize results
@@ -164,9 +165,9 @@ async def gelbooru_get(self, ctx, server, channel, lock):
     gelTagSearch = ""
     # Apply tags to URL
     if server.id in self.gelFilters:
-        gelTagSearch += " ".join(self.gelFilters[server.id])
+        gelTagSearch += " ".join(self.filters[server.id][2])
     else:
-        gelTagSearch += " ".join(self.gelFilters["default"])
+        gelTagSearch += " ".join(self.filters["default"][2])
     gelSearch += parse.quote_plus(gelTagSearch)
 
     await lock.acquire()
@@ -243,9 +244,9 @@ async def konachan_get(self, ctx, server, channel, lock):
     konaTagSearch = ""
     # Apply tags to URL
     if server.id in self.konaFilters:
-        konaTagSearch += " ".join(self.konaFilters[server.id])
+        konaTagSearch += " ".join(self.konaFilters[server.id][3])
     else:
-        konaTagSearch += " ".join(self.konaFilters["default"])
+        konaTagSearch += " ".join(self.konaFilters["default"][3])
 
     # Randomize results
     konaTagSearch += " order:random"
