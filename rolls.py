@@ -17,7 +17,7 @@ async def lolibooru_get(self, ctx, server, channel, lock):
     loliTagSearch = ""
 
     # Assign tags to URL
-    if server.id in self.loliFilters:
+    if server.id in self.filters:
         loliTagSearch += " ".join(self.filters[server.id][0])
     else:
         loliTagSearch += " ".join(self.filters["default"][0])
@@ -86,7 +86,7 @@ async def danbooru_get(self, ctx, server, channel, lock):
     danTagSearch = ""
 
     # Assign tags to URL
-    if server.id in self.danFilters:
+    if server.id in self.filters:
         danTagSearch += " ".join(self.filters[server.id][1])
     else:
         danTagSearch += " ".join(self.filters["default"][1])

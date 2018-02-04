@@ -10,7 +10,7 @@ Each dictionary element is list of applied filters as strings.
 * list of server id's
 * default
 
-Each dictionary element contains tuple of list of applied
+Each dictionary element contains dictionary of list of applied
 filters as strings.
 ## File array list:
 0. lolibooru

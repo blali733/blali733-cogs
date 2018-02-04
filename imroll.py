@@ -1,4 +1,9 @@
+import random
+from urllib import parse
+
+import aiohttp
 import discord
+import sys
 from discord.ext import commands
 
 from utils import checks
@@ -16,6 +21,32 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
+        self.phrases = {
+            "loli": {"random": "+order%3Arandom",
+                     "call": "https://lolibooru.moe/post/index.json?limit=1&tags=",
+                     "embed": "https://lolibooru.moe/post/show/{}",
+                     "m1": "Fetching loli image...",
+                     "m2": "loli preview ^^",
+                     "title": "Lolibooru Image #{}"},
+            "gel": {"random": "",
+                    "call": "http://gelbooru.com/index.php?page=dapi&s=post&limit=1&q=index&tags=",
+                    "embed": "https://gelbooru.com/index.php?page=post&s=view&id={}",
+                    "m1": "Fetching gel image...",
+                    "m2": "gel preview",
+                    "title": "Gelbooru Image #{}"},
+            "dan": {"random": "&random=y",
+                    "call": "http://danbooru.donmai.us/posts.json?tags=",
+                    "embed": "https://danbooru.donmai.us/posts/{}",
+                    "m1": "Fetching dan image...",
+                    "m2": "dan preview",
+                    "title": "Danbooru Image #{}"},
+            "kona": {"random": "+order%3Arandom",
+                     "call": "https://konachan.com/post.json?limit=1&tags=",
+                     "embed": "https://konachan.com/post/show/{}",
+                     "m1": "Fetching kona image...",
+                     "m2": "Kona(ta) preview",
+                     "title": "Konachan Image #{}"}
+        }
 
     # TODO fix this region:
     # region Filters and settings
@@ -154,10 +185,10 @@ class ImRoll:
 
         lock = asyncio.Lock()
         await asyncio.gather(
-            rolls.lolibooru_get(self, ctx, server, channel, lock) if self.active["loli"] == "true" else dummy(),
-            rolls.danbooru_get(self, ctx, server, channel, lock) if self.active["dan"] == "true" else dummy(),
-            rolls.gelbooru_get(self, ctx, server, channel, lock) if self.active["gel"] == "true" else dummy(),
-            rolls.konachan_get(self, ctx, server, channel, lock) if self.active["kona"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "loli", lock) if self.active["loli"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "dan", lock) if self.active["dan"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "gel", lock) if self.active["gel"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "kona", lock) if self.active["kona"] == "true" else dummy(),
         )
 
     @commands.command(pass_context=True, no_pm=True)
@@ -168,15 +199,11 @@ class ImRoll:
         self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
 
-        l1 = asyncio.Lock()
-        l2 = asyncio.Lock()
-        l3 = asyncio.Lock()
-        l4 = asyncio.Lock()
         await asyncio.gather(
-            rolls.lolibooru_get(self, ctx, server, channel, l1) if self.active["loli"] == "true" else dummy(),
-            rolls.danbooru_get(self, ctx, server, channel, l2) if self.active["dan"] == "true" else dummy(),
-            rolls.gelbooru_get(self, ctx, server, channel, l3) if self.active["gel"] == "true" else dummy(),
-            rolls.konachan_get(self, ctx, server, channel, l4) if self.active["kona"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "loli", False, False) if self.active["loli"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "dan", False, False) if self.active["dan"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "gel", False, False) if self.active["gel"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "kona", False, False) if self.active["kona"] == "true" else dummy(),
         )
 
     @commands.command(pass_context=True, no_pm=True)
@@ -270,6 +297,147 @@ class ImRoll:
         lock = asyncio.Lock()
         await rolls.konachan_get(self, ctx, server, channel, lock)
 
+    async def get_details(self, page, ident, mode):
+        # Fetches the image ID
+        image_id = page[ident].get('id')
+
+        # Sets the embed title
+        embed_title = self.phrases[mode]["title"].format(image_id)
+
+        # Sets the URL to be linked
+        embed_link = self.phrases[mode]["embed"].format(image_id)
+
+        # Check for the rating and set an appropriate color
+        rating = page[ident].get('rating')
+        if rating == "s":
+            rating_color = "00FF00"
+            # rating_word = "safe"
+        elif rating == "q":
+            rating_color = "FF9900"
+            # rating_word = "questionable"
+        elif rating == "e":
+            rating_color = "FF0000"
+            # rating_word = "explicit"
+        else:
+            rating_color = "000000"
+
+        # Initialize verbose embed
+        return discord.Embed(title=embed_title, url=embed_link,
+                             colour=discord.Colour(value=int(rating_color, 16)))
+
+    async def image_get(self, ctx, server, channel, mode, lock, sync=True):
+        search_phrase = self.phrases[mode]["call"]
+        tag_list = ''
+
+        # Assign tags to URL
+        if server.id in self.filters:
+            tag_list += " ".join(self.filters[server.id][mode])
+        else:
+            tag_list += " ".join(self.filters["default"][mode])
+        search_phrase += parse.quote_plus(tag_list)
+
+        if mode is not "gel":
+            search_phrase += self.phrases[mode]["random"]
+
+        if sync:
+            await lock.acquire()
+            m1 = await self.bot.send_message(channel, self.phrases[mode]["m1"])
+            m2 = await self.bot.send_message(channel, self.phrases[mode]["m2"])
+            lock.release()
+        else:
+            m1 = await self.bot.send_message(channel, self.phrases[mode]["m1"])
+            m2 = await self.bot.send_message(channel, self.phrases[mode]["m2"])
+
+        if mode is "gel":
+            # region Gelbooru
+            try:
+                # Fetch the xml page to randomize the results
+                async with aiohttp.get(search_phrase) as r:
+                    website = await r.text()
+
+                # Gets the amount of results
+                count_start = website.find("count=\"")
+                count_end = website.find("\"", count_start + 7)
+                count = website[count_start + 7:count_end]
+
+                # Picks a random page and sets the search URL to json
+                pid = str(random.randint(0, int(count)))
+                search_phrase += "&json=1&pid={}".format(pid)
+                # Fetches the json page
+                async with aiohttp.get(search_phrase) as r:
+                    page = await r.json()
+                if page:
+                    # Sets the image URL
+                    image_url = "{}".format(website[0]['file_url'])
+
+                    output = await self.get_details(page, 0, mode)
+
+                    # Edits the pending message with the results
+                    await self.bot.edit_message(m1, "Image details", embed=output)
+                    await self.bot.edit_message(m2, image_url)
+                else:
+                    await self.bot.edit_message(m1, "Your search terms gave no results.")
+            except:
+                mtype, obj, tb = sys.exc_info()
+                return await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
+            # endregion
+        elif mode is "dan":
+            # region Danbooru
+            try:
+                async with aiohttp.get(search_phrase) as d:
+                    page = await d.json()
+                if page:
+                    if "success" not in page:
+                        fuse = 0
+                        for index in range(len(page)):  # Goes through each result until it finds one that works
+                            if "file_url" in page[index]:
+                                # Sets the image URL
+                                url = page[index].get('file_url')
+                                # Hack around two different versions of image link.
+                                if url[0] is 'h':
+                                    image_url = url
+                                else:
+                                    image_url = "https://danbooru.donmai.us{}".format(url)
+
+                                output = await self.get_details(page, index, mode)
+
+                                # Edits the pending message with the results
+                                await self.bot.edit_message(m1, "Image found.", embed=output)
+                                await self.bot.edit_message(m2, image_url)
+                                fuse = 1
+                                break
+                        if fuse == 0:
+                            await self.bot.edit_message(m1, "Cannot find an image that can be viewed by you.")
+                    else:
+                        # Edits the pending message with an error received by the server
+                        await self.bot.edit_message(m1, "{}".format(page["message"]))
+                else:
+                    await self.bot.edit_message(m1, "Your search terms gave no results.")
+            except:
+                mtype, obj, tb = sys.exc_info()
+                await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
+            # endregion
+        else:
+            # region Lolibooru / Konachan
+            try:
+                async with aiohttp.get(search_phrase) as r:
+                    page = await r.json()
+                if page:
+                    # Sets the image URL
+                    image_url = page[0].get("file_url").replace(' ', '+')
+
+                    output = await self.get_details(page, 0, mode)
+
+                    # Edits the pending messages with the results
+                    await self.bot.edit_message(m1, "Image found.", embed=output)
+                    return await self.bot.edit_message(m2, image_url)
+                else:
+                    return await self.bot.edit_message(m1, "Your search terms gave no results.")
+            except:
+                mtype, obj, tb = sys.exc_info()
+                return await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
+            # endregion
+
 
 async def dummy():
     pass
@@ -281,17 +449,11 @@ def check_folder():
         os.makedirs("data/rolls")
 
 
-def set_activity():
-    activity = {"loli": "true", "kona": "true", "gel": "true", "dan": "true"}
-
-    if not fileIO("data/rolls/active.json", "check"):
-        print("Creating default active.json...")
-        fileIO("data/rolls/active.json", "save", activity)
-
-
 def check_files():
-    filters = {"default": (["rating:safe"], ["rating:safe"], ["rating:safe"], ["rating:safe"])}
-    settings = {"maxfilters": ("50", "10", "50", "50")}
+    filters = {"default": {"loli": ["rating:safe"], "gel": ["rating:safe"], "dan": ["rating:safe"],
+                           "kona": ["rating:safe"]}}
+    settings = {"maxfilters": {"loli": "50", "gel": "10", "dan": "50", "kona": "50"}}
+    activity = {"loli": "true", "kona": "true", "gel": "true", "dan": "true"}
 
     # region File checking
     if not fileIO("data/rolls/filters.json", "check"):
@@ -306,11 +468,13 @@ def check_files():
     if not fileIO("data/rolls/settings.json", "check"):
         print("Creating default settings.json...")
         fileIO("data/rolls/settings.json", "save", settings)
+    if not fileIO("data/rolls/active.json", "check"):
+        print("Creating default active.json...")
+        fileIO("data/rolls/active.json", "save", activity)
     # endregion
 
 
 def setup(bot):
     check_folder()
-    set_activity()
     check_files()
     bot.add_cog(ImRoll(bot))
