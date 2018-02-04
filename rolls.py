@@ -109,7 +109,12 @@ async def danbooru_get(self, ctx, server, channel, lock):
                 for index in range(len(danbooru)):  # Goes through each result until it finds one that works
                     if "file_url" in danbooru[index]:
                         # Sets the image URL
-                        danImageURL = "https://danbooru.donmai.us{}".format(danbooru[index].get('file_url'))
+                        url = danbooru[index].get('file_url')
+                        # Hack around two different versions of image link.
+                        if "http" in url:
+                            danImageURL = url
+                        else:
+                            danImageURL = "https://danbooru.donmai.us{}".format(url)
                         # Fetches the image ID
                         danImageId = danbooru[index].get('id')
 
