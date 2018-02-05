@@ -175,6 +175,7 @@ class ImRoll:
         await self.bot.say("Maximum filters allowed per server for loli set to '{}'.".format(maxfilters))
     # endregion
 
+    # region Group rolls
     @commands.command(pass_context=True, no_pm=True)
     async def imroll(self, ctx, *text):
         server = ctx.message.server
@@ -205,58 +206,9 @@ class ImRoll:
             self.image_get(ctx, server, channel, "gel", False, False) if self.active["gel"] == "true" else dummy(),
             self.image_get(ctx, server, channel, "kona", False, False) if self.active["kona"] == "true" else dummy(),
         )
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def getSwitch(self, ctx, *text):
-        self.active = fileIO("data/rolls/active.json", "load")
-        await self.bot.say(self.active)
-
-    # region Switches
-    @commands.command(pass_context=True, no_pm=True)
-    async def loliSwitch(self, ctx, *text):
-        self.active = fileIO("data/rolls/active.json", "load")
-        if self.active["loli"] == "true":
-            self.active["loli"] = "false"
-            await self.bot.say("Loli disabled!")
-        else:
-            self.active["loli"] = "true"
-            await self.bot.say("Loli enabled!")
-        fileIO("data/rolls/active.json", "save", self.active)
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def konaSwitch(self, ctx, *text):
-        self.active = fileIO("data/rolls/active.json", "load")
-        if self.active["kona"] == "true":
-            self.active["kona"] = "false"
-            await self.bot.say("Kona(ta) disabled!")
-        else:
-            self.active["kona"] = "true"
-            await self.bot.say("Kona(ta) enabled!")
-        fileIO("data/rolls/active.json", "save", self.active)
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def danSwitch(self, ctx, *text):
-        self.active = fileIO("data/rolls/active.json", "load")
-        if self.active["dan"] == "true":
-            self.active["dan"] = "false"
-            await self.bot.say("Dan disabled!")
-        else:
-            self.active["dan"] = "true"
-            await self.bot.say("Dan enabled!")
-        fileIO("data/rolls/active.json", "save", self.active)
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def gelSwitch(self, ctx, *text):
-        self.active = fileIO("data/rolls/active.json", "load")
-        if self.active["gel"] == "true":
-            self.active["gel"] = "false"
-            await self.bot.say("Gel disabled!")
-        else:
-            self.active["gel"] = "true"
-            await self.bot.say("Gel enabled!")
-        fileIO("data/rolls/active.json", "save", self.active)
     # endregion
 
+    # region Single rolls
     @commands.command(pass_context=True, no_pm=True)
     async def lolirs(self, ctx, *text):
         server = ctx.message.server
@@ -264,8 +216,7 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
 
-        lock = asyncio.Lock()
-        await rolls.lolibooru_get(self, ctx, server, channel, lock)
+        await self.image_get(ctx, server, channel, "loli", False, False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
@@ -274,8 +225,7 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
 
-        lock = asyncio.Lock()
-        await rolls.danbooru_get(self, ctx, server, channel, lock)
+        await self.image_get(ctx, server, channel, "dan", False, False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
@@ -284,8 +234,7 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
 
-        lock = asyncio.Lock()
-        await rolls.gelbooru_get(self, ctx, server, channel, lock)
+        await self.image_get(ctx, server, channel, "gel", False, False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
@@ -294,9 +243,44 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
 
-        lock = asyncio.Lock()
-        await rolls.konachan_get(self, ctx, server, channel, lock)
+        await self.image_get(ctx, server, channel, "kona", False, False)
+    # endregion
 
+    # region Configrolls
+    @commands.group(pass_context=True)
+    async def configrolls(self, ctx):
+        if ctx.invoked_subcommand is None:
+            self.active = fileIO("data/rolls/active.json", "load")
+            await self.bot.say(self.active)
+
+    async def toggle_switch(self, mode):
+        self.active = fileIO("data/rolls/active.json", "load")
+        if self.active[mode] == "true":
+            self.active[mode] = "false"
+            await self.bot.say(mode + " - disabled!")
+        else:
+            self.active[mode] = "true"
+            await self.bot.say(mode + " - enabled!")
+        fileIO("data/rolls/active.json", "save", self.active)
+
+    @configrolls.command(name="loli", pass_context=True, no_pm=True)
+    async def _loli_switch(self, ctx, *text):
+        self.toggle_switch("loli")
+
+    @configrolls.command(pass_context=True, no_pm=True)
+    async def _kona_switch(self, ctx, *text):
+        self.toggle_switch("kona")
+
+    @configrolls.command(pass_context=True, no_pm=True)
+    async def _dan_switch(self, ctx, *text):
+        self.toggle_switch("dan")
+
+    @configrolls.command(pass_context=True, no_pm=True)
+    async def _gel_switch(self, ctx, *text):
+        self.toggle_switch("gel")
+    # endregion
+
+    # region Support functions
     async def get_details(self, page, ident, mode):
         # Fetches the image ID
         image_id = page[ident].get('id')
@@ -437,6 +421,7 @@ class ImRoll:
                 mtype, obj, tb = sys.exc_info()
                 return await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
             # endregion
+    # endregion
 
 
 async def dummy():
