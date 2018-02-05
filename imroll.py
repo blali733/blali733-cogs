@@ -49,115 +49,35 @@ class ImRoll:
         }
 
     # TODO fix this region:
-    # region Filters and settings
+    # region Filters
     @commands.group(pass_context=True)
-    async def imlolifilter(self, ctx):
-        """Manages loli filters
-           Warning: Can be used to allow NSFW images
+    async def rollfilter(self, ctx):
+        """Manages filters for image providers
+           Warning: Can (could and will ^^) be used to allow NSFW images
 
            Filters automatically apply tags to each search"""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @imlolifilter.command(name="add", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _add_imlolifilter(self, ctx, filtertag: str):
-        """Adds a tag to the server's loli filter list
-
-           Example: !lolifilter add rating:s"""
-        add_filter(self, ctx, filtertag, "loli")
-
-    @imlolifilter.command(name="del", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _del_imlolifilter(self, ctx, filtertag: str = ""):
-        """Deletes a tag from the server's loli filter list
-
-           Without arguments, reverts to the default loli filter list
-
-           Example: !lolifilter del rating:s"""
-        del_filter(self, ctx, filtertag, "loli")
-
-    @commands.group(pass_context=True)
-    async def imgelfilter(self, ctx):
-        """Manages gel filters
-           Warning: Can be used to allow NSFW images
+    @rollfilter.geoup(name="loli", pass_context=True)
+    async def _loli_rollfilter(self, ctx):
+        """Manages filters for Lolibooru
+           Warning: Can (could and will ^^) be used to allow NSFW images
 
            Filters automatically apply tags to each search"""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @imgelfilter.command(name="add", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _add_imgelfilter(self, ctx, filtertag: str):
-        """Adds a tag to the server's gel filter list
+    @_loli_rollfilter.command(name="add")
+    async def _add_loli_rollfilter(self, filter_tag: str):
+        await self.bot.say("add loli filter", filter_tag)
 
-           Example: !gelfilter add rating:s"""
-        add_filter(self, ctx, filtertag, "gel")
+    @_loli_rollfilter.command(name="del")
+    async def _del_loli_rollfilter(self, filter_tag: str):
+        await self.bot.say("del loli filter", filter_tag)
+    # endregion
 
-    @imgelfilter.command(name="del", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _del_imgelfilter(self, ctx, filtertag: str = ""):
-        """Deletes a tag from the server's gel filter list
-
-           Without arguments, reverts to the default gel filter list
-
-           Example: !gelfilter del rating:s"""
-        del_filter(self, ctx, filtertag, "gel")
-
-    @commands.group(pass_context=True)
-    async def imdanfilter(self, ctx):
-        """Manages dan filters
-           Warning: Can be used to allow NSFW images
-
-           Filters automatically apply tags to each search"""
-        if ctx.invoked_subcommand is None:
-            await send_cmd_help(ctx)
-
-    @imdanfilter.command(name="add", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _add_imdanfilter(self, ctx, filtertag: str):
-        """Adds a tag to the server's dan filter list
-
-           Example: !danfilter add rating:s"""
-        add_filter(self, ctx, filtertag, "dan")
-
-    @imdanfilter.command(name="del", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _del_imdanfilter(self, ctx, filtertag: str = ""):
-        """Deletes a tag from the server's dan filter list
-
-           Without arguments, reverts to the default dan filter list
-
-           Example: !danfilter del rating:s"""
-        del_filter(self, ctx, filtertag, "dan")
-
-    @commands.group(pass_context=True)
-    async def imkonafilter(self, ctx):
-        """Manages kona filters
-           Warning: Can be used to allow NSFW images
-
-           Filters automatically apply tags to each search"""
-        if ctx.invoked_subcommand is None:
-            await send_cmd_help(ctx)
-
-    @imkonafilter.command(name="add", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _add_imkonafilter(self, ctx, filtertag: str):
-        """Adds a tag to the server's kona filter list
-
-           Example: !konafilter add rating:s"""
-        add_filter(self, ctx, filtertag, "kona")
-
-    @imkonafilter.command(name="del", pass_context=True, no_pm=True)
-    @checks.admin_or_permissions(manage_server=True)
-    async def _del_imkonafilter(self, ctx, filtertag: str = ""):
-        """Deletes a tag from the server's kona filter list
-
-           Without arguments, reverts to the default kona filter list
-
-           Example: !konafilter del rating:s"""
-        del_filter(self, ctx, filtertag, "kona")
-
+    # region Settings
     @commands.group(pass_context=True)
     @checks.is_owner()
     async def loliset(self, ctx):
