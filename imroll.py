@@ -6,7 +6,7 @@ import discord
 import sys
 from discord.ext import commands
 
-from utils import checks
+from .utils import checks
 from .utils.dataIO import fileIO
 import os
 import asyncio
@@ -59,34 +59,28 @@ class ImRoll:
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @rollfilter.geoup(name="loli", pass_context=True)
-    async def _loli_rollfilter(self, ctx):
+    @rollfilter.command(name="loli", pass_context=True)
+    async def _loli_rollfilter(self, ctx, modifier, tag):
         """Manages filters for Lolibooru
            Warning: Can (could and will ^^) be used to allow NSFW images
 
            Filters automatically apply tags to each search"""
-        if ctx.invoked_subcommand is None:
-            await send_cmd_help(ctx)
-
-    @_loli_rollfilter.command(name="add")
-    async def _add_loli_rollfilter(self, filter_tag: str):
-        await self.bot.say("add loli filter", filter_tag)
-
-    @_loli_rollfilter.command(name="del")
-    async def _del_loli_rollfilter(self, filter_tag: str):
-        await self.bot.say("del loli filter", filter_tag)
+        if "add" in modifier:
+            await self.bot.say("add "+tag)
+        elif "del" in modifier:
+            await self.bot.say("del " + tag)
     # endregion
 
     # region Settings
     @commands.group(pass_context=True)
     @checks.is_owner()
-    async def loliset(self, ctx):
+    async def imloliset(self, ctx):
         """Manages loli options"""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
 
-    @loliset.command(name="maxfilters")
-    async def _maxfilters_loliset(self, maxfilters):
+    @imloliset.command(name="maxfilters")
+    async def _maxfilters_imloliset(self, maxfilters):
         """Sets the global tag limit for the filter list
 
            Gives an error when a user tries to add a filter while the server's filter list contains a certain amount of tags"""
@@ -185,19 +179,19 @@ class ImRoll:
 
     @configrolls.command(name="loli", pass_context=True, no_pm=True)
     async def _loli_switch(self, ctx, *text):
-        self.toggle_switch("loli")
+        await self.toggle_switch("loli")
 
-    @configrolls.command(pass_context=True, no_pm=True)
+    @configrolls.command(name="kona", pass_context=True, no_pm=True)
     async def _kona_switch(self, ctx, *text):
-        self.toggle_switch("kona")
+        await self.toggle_switch("kona")
 
-    @configrolls.command(pass_context=True, no_pm=True)
+    @configrolls.command(name="dan", pass_context=True, no_pm=True)
     async def _dan_switch(self, ctx, *text):
-        self.toggle_switch("dan")
+        await self.toggle_switch("dan")
 
-    @configrolls.command(pass_context=True, no_pm=True)
+    @configrolls.command(name="gel", pass_context=True, no_pm=True)
     async def _gel_switch(self, ctx, *text):
-        self.toggle_switch("gel")
+        await self.toggle_switch("gel")
     # endregion
 
     # region Support functions
