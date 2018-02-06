@@ -59,6 +59,8 @@ class ImRoll:
     @rollfilter.command(name="import", pass_context=True)
     async def _import_rollfilter(self, ctx):
         server = ctx.message.server
+        if server.id not in self.filters:
+            self.filters[server.id] = self.filters["default"]
         vals = fileIO("data/loli/filters.json", "load")
         if server.id in vals:
             self.filters[server.id]["loli"] = vals[server.id]
@@ -91,11 +93,17 @@ class ImRoll:
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
         server = ctx.message.server
-        loli_list = self.filters[server.id]["loli"]
-        await self.bot.say(loli_list)
-        await self.bot.say(self.filters[server.id]["kona"])
-        await self.bot.say(self.filters[server.id]["dan"])
-        await self.bot.say(self.filters[server.id]["gel"])
+        if server.id in self.filters:
+            list_tags = '\n'.join(sorted(self.filters[server.id]["loli"]))
+            await self.bot.say("Loli filter list: ```\n{}```".format(list_tags))
+            list_tags = '\n'.join(sorted(self.filters[server.id]["kona"]))
+            await self.bot.say("Kona filter list: ```\n{}```".format(list_tags))
+            list_tags = '\n'.join(sorted(self.filters[server.id]["gel"]))
+            await self.bot.say("Gel filter list: ```\n{}```".format(list_tags))
+            list_tags = '\n'.join(sorted(self.filters[server.id]["dan"]))
+            await self.bot.say("Dan filter list: ```\n{}```".format(list_tags))
+        else:
+            await self.bot.say("No custom filters found!")
 
     @rollfilter.command(name="loli", pass_context=True)
     async def _loli_rollfilter(self, ctx, operation, tag):
