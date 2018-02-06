@@ -55,10 +55,47 @@ class ImRoll:
            Filters automatically apply tags to each search"""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
+            
+    @rollfilter.command(name="import", pass_context=True)
+    async def _import_rollfilter(self, ctx):
+        server = ctx.message.server
+        vals = fileIO("data/loli/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["loli"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Loli filters not found!")
+        vals = fileIO("data/kona/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["kona"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Kona filters not found!")
+        vals = fileIO("data/gel/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["gel"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Gel filters not found!")
+        vals = fileIO("data/dan/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["dan"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Dan filters not found!")
 
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
-        await self.bot.say(self.filters[ctx.message.server.id])
+        server = ctx.message.server
+        loli_list = self.filters[server.id]["loli"]
+        await self.bot.say(loli_list)
+        await self.bot.say(self.filters[server.id]["kona"])
+        await self.bot.say(self.filters[server.id]["dan"])
+        await self.bot.say(self.filters[server.id]["gel"])
 
     @rollfilter.command(name="loli", pass_context=True)
     async def _loli_rollfilter(self, ctx, operation, tag):
