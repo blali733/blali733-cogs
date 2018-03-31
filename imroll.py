@@ -271,8 +271,8 @@ class ImRoll:
                     output = await self.get_details(page, 0, mode)
 
                     # Edits the pending message with the results
-                    await self.bot.edit_message(m1, "Image details", embed=output)
-                    await self.bot.edit_message(m2, image_url)
+                    await self.bot.edit_message(m1, "As requested by: "+ctx.message.author.name, embed=output)
+                    await self.bot.edit_message(m2, ctx.message.author.name+": "+image_url)
                 else:
                     await self.bot.edit_message(m1, "Your search terms gave no results.")
             except:
@@ -300,8 +300,8 @@ class ImRoll:
                                 output = await self.get_details(page, index, mode)
 
                                 # Edits the pending message with the results
-                                await self.bot.edit_message(m1, "Image found.", embed=output)
-                                await self.bot.edit_message(m2, image_url)
+                                await self.bot.edit_message(m1, "As requested by: "+ctx.message.author.name, embed=output)
+                                await self.bot.edit_message(m2, ctx.message.author.name+": "+image_url)
                                 fuse = 1
                                 break
                         if fuse == 0:
@@ -327,8 +327,8 @@ class ImRoll:
                     output = await self.get_details(page, 0, mode)
 
                     # Edits the pending messages with the results
-                    await self.bot.edit_message(m1, "Image found.", embed=output)
-                    return await self.bot.edit_message(m2, image_url)
+                    await self.bot.edit_message(m1, "As requested by: "+ctx.message.author.name, embed=output)
+                    return await self.bot.edit_message(m2, ctx.message.author.name+": "+image_url)
                 else:
                     return await self.bot.edit_message(m1, "Your search terms gave no results.")
             except:
