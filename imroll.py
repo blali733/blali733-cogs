@@ -10,8 +10,6 @@ from .utils import checks
 from .utils.dataIO import fileIO
 import os
 import asyncio
-from . import rolls
-from .imSettings import add_filter, del_filter
 from __main__ import send_cmd_help
 
 
@@ -48,7 +46,6 @@ class ImRoll:
                      "title": "Konachan Image #{}"}
         }
 
-    # TODO fix this region:
     # region Filters
     @commands.group(pass_context=True)
     async def rollfilter(self, ctx):
@@ -58,35 +55,120 @@ class ImRoll:
            Filters automatically apply tags to each search"""
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
+            
+    @rollfilter.command(name="import", pass_context=True)
+    async def _import_rollfilter(self, ctx):
+        server = ctx.message.server
+        if server.id not in self.filters:
+            self.filters[server.id] = self.filters["default"]
+        vals = fileIO("data/loli/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["loli"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Loli filters not found!")
+        vals = fileIO("data/kona/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["kona"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Kona filters not found!")
+        vals = fileIO("data/gel/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["gel"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Gel filters not found!")
+        vals = fileIO("data/dan/filters.json", "load")
+        if server.id in vals:
+            self.filters[server.id]["dan"] = vals[server.id]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        else:
+            await self.bot.say("Dan filters not found!")
+
+    @rollfilter.command(name="show", pass_context=True)
+    async def _filters_show(self, ctx):
+        server = ctx.message.server
+        if server.id in self.filters:
+            list_tags = '\n'.join(sorted(self.filters[server.id]["loli"]))
+            await self.bot.say("Loli filter list: ```\n{}```".format(list_tags))
+            list_tags = '\n'.join(sorted(self.filters[server.id]["kona"]))
+            await self.bot.say("Kona filter list: ```\n{}```".format(list_tags))
+            list_tags = '\n'.join(sorted(self.filters[server.id]["gel"]))
+            await self.bot.say("Gel filter list: ```\n{}```".format(list_tags))
+            list_tags = '\n'.join(sorted(self.filters[server.id]["dan"]))
+            await self.bot.say("Dan filter list: ```\n{}```".format(list_tags))
+        else:
+            await self.bot.say("No custom filters found!")
 
     @rollfilter.command(name="loli", pass_context=True)
-    async def _loli_rollfilter(self, ctx, modifier, tag):
+    async def _loli_rollfilter(self, ctx, operation, tag):
         """Manages filters for Lolibooru
            Warning: Can (could and will ^^) be used to allow NSFW images
 
            Filters automatically apply tags to each search"""
-        if "add" in modifier:
-            await self.bot.say("add "+tag)
-        elif "del" in modifier:
-            await self.bot.say("del " + tag)
+        if "add" in operation:
+            await self.filter_add(ctx, "loli", tag)
+        elif "del" in operation:
+            await self.filter_del(ctx, "loli", tag)
+        elif "show" in operation:
+            await self.bot.say(self.filters[ctx.message.server.id]["loli"])
+
+    @rollfilter.command(name="dan", pass_context=True)
+    async def _dan_rollfilter(self, ctx, operation, tag):
+        """Manages filters for Danbooru
+           Warning: Can (could and will ^^) be used to allow NSFW images
+
+           Filters automatically apply tags to each search"""
+        if "add" in operation:
+            await self.filter_add(ctx, "dan", tag)
+        elif "del" in operation:
+            await self.filter_del(ctx, "dan", tag)
+        elif "show" in operation:
+            await self.bot.say(self.filters[ctx.message.server.id]["dan"])
+
+    @rollfilter.command(name="gel", pass_context=True)
+    async def _gel_rollfilter(self, ctx, operation, tag):
+        """Manages filters for Gelbooru
+           Warning: Can (could and will ^^) be used to allow NSFW images
+
+           Filters automatically apply tags to each search"""
+        if "add" in operation:
+            await self.filter_add(ctx, "gel", tag)
+        elif "del" in operation:
+            await self.filter_del(ctx, "gel", tag)
+        elif "show" in operation:
+            await self.bot.say(self.filters[ctx.message.server.id]["gel"])
+
+    @rollfilter.command(name="kona", pass_context=True)
+    async def _kona_rollfilter(self, ctx, operation, tag):
+        """Manages filters for Konachan
+           Warning: Can (could and will ^^) be used to allow NSFW images
+
+           Filters automatically apply tags to each search"""
+        if "add" in operation:
+            await self.filter_add(ctx, "kona", tag)
+        elif "del" in operation:
+            await self.filter_del(ctx, "kona", tag)
+        elif "show" in operation:
+            await self.bot.say(self.filters[ctx.message.server.id]["kona"])
     # endregion
 
     # region Settings
-    @commands.group(pass_context=True)
-    @checks.is_owner()
-    async def imloliset(self, ctx):
-        """Manages loli options"""
-        if ctx.invoked_subcommand is None:
-            await send_cmd_help(ctx)
-
-    @imloliset.command(name="maxfilters")
-    async def _maxfilters_imloliset(self, maxfilters):
+    @commands.command(no_pm=True)
+    async def maxfilters(self, mod, maxfilters):
         """Sets the global tag limit for the filter list
 
-           Gives an error when a user tries to add a filter while the server's filter list contains a certain amount of tags"""
-        self.settings["maxfilters"] = maxfilters
-        fileIO("data/rolls/loli_settings.json", "save", self.settings)
-        await self.bot.say("Maximum filters allowed per server for loli set to '{}'.".format(maxfilters))
+           Gives an error when a user tries to add a filter while the server's filter list
+           contains a certain amount of tags
+           """
+        self.settings["maxfilters"][mod] = maxfilters
+        fileIO("data/rolls/settings.json", "save", self.settings)
+        await self.bot.say("Maximum filters allowed per server for " + mod + " set to '{}'.".format(maxfilters))
     # endregion
 
     # region Group rolls
@@ -195,6 +277,46 @@ class ImRoll:
     # endregion
 
     # region Support functions
+    async def filter_add(self, ctx, mod, tag):
+        server = ctx.message.server
+        if server.id not in self.filters:
+            self.filters[server.id] = self.filters["default"]
+            fileIO("data/rolls/filters.json", "save", self.filters)
+            self.filters = fileIO("data/rolls/filters.json", "load")
+        if len(self.filters[server.id][mod]) < int(self.settings["maxfilters"][mod]):
+            if tag not in self.filters[server.id][mod]:
+                self.filters[server.id][mod].append(tag)
+                fileIO("data/rolls/filters.json", "save", self.filters)
+                await self.bot.say("Filter '{}' added to the server's {} filter list.".format(tag, mod))
+            else:
+                await self.bot.say(
+                    "Filter '{}' is already in the server's {} filter list.".format(tag, mod))
+        else:
+            await self.bot.say("This server has exceeded the maximum filters ({}/{})."
+                               " https://www.youtube.com/watch?v=1MelZ7xaacs".format(
+                                len(self.filters[server.id][mod]), self.settings["maxfilters"][mod]))
+
+    async def filter_del(self, ctx, mod, tag):
+        server = ctx.message.server
+        if len(tag) > 0:
+            if server.id not in self.filters:
+                self.filters[server.id] = self.filters["default"]
+                fileIO("data/rolls/filters.json", "save", self.filters)
+                self.filters = fileIO("data/rolls/filters.json", "load")
+            if tag in self.filters[server.id][mod]:
+                self.filters[server.id][mod].remove(tag)
+                fileIO("data/rolls/filters.json", "save", self.filters)
+                await self.bot.say("Filter '{}' deleted from the server's {} filter list.".format(tag, mod))
+            else:
+                await self.bot.say("Filter '{}' does not exist in the server's {} filter list.".format(tag, mod))
+        else:
+            if server.id in self.filters:
+                del self.filters[server.id][mod]
+                fileIO("data/rolls/filters.json", "save", self.filters)
+                await self.bot.say("Reverted the server to the default " + mod + " filter list.")
+            else:
+                await self.bot.say("Server is already using the default " + mod + " filter list.")
+
     async def get_details(self, page, ident, mode):
         # Fetches the image ID
         image_id = page[ident].get('id')
