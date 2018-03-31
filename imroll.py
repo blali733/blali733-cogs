@@ -399,7 +399,7 @@ class ImRoll:
                     await self.bot.edit_message(m1, "Your search terms gave no results.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
+                return await self.bot.edit_message(m1, "Connection timed out. {}".format(tb.tb_lineno))
             # endregion
         elif mode is "dan":
             # region Danbooru
@@ -435,7 +435,7 @@ class ImRoll:
                     await self.bot.edit_message(m1, "Your search terms gave no results.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
+                await self.bot.edit_message(m1, "Connection timed out. {}".format(tb.tb_lineno))
             # endregion
         else:
             # region Lolibooru / Konachan
@@ -455,7 +455,7 @@ class ImRoll:
                     return await self.bot.edit_message(m1, "Your search terms gave no results.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Connection timed out. {}".join(tb.tb_lineno))
+                return await self.bot.edit_message(m1, "Connection timed out. {}".format(tb.tb_lineno))
             # endregion
     # endregion
 
