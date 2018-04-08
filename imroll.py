@@ -168,7 +168,7 @@ class ImRoll:
            """
         self.settings["maxfilters"][mod] = maxfilters
         fileIO("data/rolls/settings.json", "save", self.settings)
-        await self.bot.say("Maximum filters allowed per server for " + mod + " set to '{}'.".format(maxfilters))
+        await self.bot.say("Maximum filters allowed per server for {} set to '{}'.".format(mod, maxfilters))
     # endregion
 
     # region Group rolls
@@ -313,9 +313,9 @@ class ImRoll:
             if server.id in self.filters:
                 del self.filters[server.id][mod]
                 fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say("Reverted the server to the default " + mod + " filter list.")
+                await self.bot.say("Reverted the server to the default {} filter list.".format(mod))
             else:
-                await self.bot.say("Server is already using the default " + mod + " filter list.")
+                await self.bot.say("Server is already using the default {} filter list.".format(mod))
 
     async def get_details(self, page, ident, mode):
         # Fetches the image ID
@@ -393,13 +393,14 @@ class ImRoll:
                     output = await self.get_details(page, 0, mode)
 
                     # Edits the pending message with the results
-                    await self.bot.edit_message(m1, "As requested by: "+ctx.message.author.name, embed=output)
-                    await self.bot.edit_message(m2, ctx.message.author.name+": "+image_url)
+                    await self.bot.edit_message(m1, "As requested by: {}".format(ctx.message.author.name), embed=output)
+                    await self.bot.edit_message(m2, "{}: {}".format(ctx.message.author.name, image_url))
                 else:
-                    await self.bot.edit_message(m1, "Your search terms gave no results.")
+                    await self.bot.edit_message(m1, "Server gave no response.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Connection timed out. {}".format(tb.tb_lineno))
+                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line{}"
+                                                       .format(tb.tb_lineno))
             # endregion
         elif mode is "dan":
             # region Danbooru
@@ -422,8 +423,9 @@ class ImRoll:
                                 output = await self.get_details(page, index, mode)
 
                                 # Edits the pending message with the results
-                                await self.bot.edit_message(m1, "As requested by: "+ctx.message.author.name, embed=output)
-                                await self.bot.edit_message(m2, ctx.message.author.name+": "+image_url)
+                                await self.bot.edit_message(m1, "As requested by: {}".format(ctx.message.author.name),
+                                                            embed=output)
+                                await self.bot.edit_message(m2, "{}: {}".format(ctx.message.author.name, image_url))
                                 fuse = 1
                                 break
                         if fuse == 0:
@@ -432,10 +434,11 @@ class ImRoll:
                         # Edits the pending message with an error received by the server
                         await self.bot.edit_message(m1, "{}".format(page["message"]))
                 else:
-                    await self.bot.edit_message(m1, "Your search terms gave no results.")
+                    await self.bot.edit_message(m1, "Server gave no response.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                await self.bot.edit_message(m1, "Connection timed out. {}".format(tb.tb_lineno))
+                await self.bot.edit_message(m1, "Error during request processing. Exception raised in line{}"
+                                                .format(tb.tb_lineno))
             # endregion
         else:
             # region Lolibooru / Konachan
@@ -449,13 +452,14 @@ class ImRoll:
                     output = await self.get_details(page, 0, mode)
 
                     # Edits the pending messages with the results
-                    await self.bot.edit_message(m1, "As requested by: "+ctx.message.author.name, embed=output)
-                    return await self.bot.edit_message(m2, ctx.message.author.name+": "+image_url)
+                    await self.bot.edit_message(m1, "As requested by: {}".format(ctx.message.author.name), embed=output)
+                    await self.bot.edit_message(m2, "{}: {}".format(ctx.message.author.name, image_url))
                 else:
-                    return await self.bot.edit_message(m1, "Your search terms gave no results.")
+                    return await self.bot.edit_message(m1, "Server gave no response.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Connection timed out. {}".format(tb.tb_lineno))
+                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line{}"
+                                                       .format(tb.tb_lineno))
             # endregion
     # endregion
 
