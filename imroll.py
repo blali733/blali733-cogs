@@ -399,7 +399,7 @@ class ImRoll:
                     await self.bot.edit_message(m1, "Server gave no response.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line{}"
+                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line: {}"
                                                        .format(tb.tb_lineno))
             # endregion
         elif mode is "dan":
@@ -437,7 +437,7 @@ class ImRoll:
                     await self.bot.edit_message(m1, "Server gave no response.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                await self.bot.edit_message(m1, "Error during request processing. Exception raised in line{}"
+                await self.bot.edit_message(m1, "Error during request processing. Exception raised in line: {}"
                                                 .format(tb.tb_lineno))
             # endregion
         else:
@@ -458,7 +458,7 @@ class ImRoll:
                     return await self.bot.edit_message(m1, "Server gave no response.")
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line{}"
+                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line: {}"
                                                        .format(tb.tb_lineno))
             # endregion
     # endregion
