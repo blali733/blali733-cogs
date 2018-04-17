@@ -11,6 +11,8 @@ from .utils.dataIO import fileIO
 import os
 import asyncio
 from __main__ import send_cmd_help
+import datetime
+import operator
 
 
 class ImRoll:
@@ -19,6 +21,7 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
+        self.counter = fileIO("data/rolls/counter.json", "load")
         self.phrases = {
             "loli": {"random": "+order%3Arandom",
                      "call": "https://lolibooru.moe/post/index.json?limit=1&tags=",
@@ -171,6 +174,39 @@ class ImRoll:
         await self.bot.say("Maximum filters allowed per server for {} set to '{}'.".format(mod, maxfilters))
     # endregion
 
+    # region Counter
+    @commands.command(pass_context=True, no_pm=True)
+    async def fapcounter(self, ctx, *text):
+        server = ctx.message.server
+        if server.id not in self.counter:
+            await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
+        else:
+            names = sorted(self.counter[server.id]["values"].items(), key=operator.itemgetter(1), reverse=True)
+            list_tags = ""
+            for tuple in names:
+                list_tags += "{} - {}\n".format(tuple[0], tuple[1])
+            await self.bot.say(
+                "Since {}, Zone-tan kept track of your faps:: ```\n{}```".format(self.counter[server.id]["date"],
+                                                                                 list_tags))
+
+    async def add_fap(self, ctx):
+        server = ctx.message.server
+        user = ctx.message.author.name
+        if server.id not in self.counter:
+            now = datetime.datetime.now()
+            date = "{}.{}.{}".format(now.day, now.month, now.year)
+            self.counter[server.id] = {"date": date, "values": {}}
+            fileIO("data/rolls/counter.json", "save", self.counter)
+            self.counter = fileIO("data/rolls/counter.json", "load")
+        if user not in self.counter[server.id]["values"]:
+            self.counter[server.id]["values"][user] = "1"
+            fileIO("data/rolls/counter.json", "save", self.counter)
+        else:
+            # Trust me, I am engineer ^^
+            self.counter[server.id]["values"][user] = str(int(self.counter[server.id]["values"][user])+1)
+            fileIO("data/rolls/counter.json", "save", self.counter)
+    # endregion
+
     # region Group rolls
     @commands.command(pass_context=True, no_pm=True)
     async def imroll(self, ctx, *text):
@@ -179,6 +215,8 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
+        self.counter = fileIO("data/rolls/counter.json", "load")
+        await self.add_fap(ctx)
 
         lock = asyncio.Lock()
         await asyncio.gather(
@@ -195,6 +233,8 @@ class ImRoll:
         self.filters = fileIO("data/rolls/filters.json", "load")
         self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
+        self.counter = fileIO("data/rolls/counter.json", "load")
+        await self.add_fap(ctx)
 
         await asyncio.gather(
             self.image_get(ctx, server, channel, "loli", False, False) if self.active["loli"] == "true" else dummy(),
@@ -475,10 +515,13 @@ def check_folder():
 
 
 def check_files():
+    now = datetime.datetime.now()
+    date = "{}.{}.{}".format(now.day, now.month, now.year)
     filters = {"default": {"loli": ["rating:safe"], "gel": ["rating:safe"], "dan": ["rating:safe"],
                            "kona": ["rating:safe"]}}
     settings = {"maxfilters": {"loli": "50", "gel": "10", "dan": "50", "kona": "50"}}
     activity = {"loli": "true", "kona": "true", "gel": "true", "dan": "true"}
+    counter = {"default": {"date": date}}
 
     # region File checking
     if not fileIO("data/rolls/filters.json", "check"):
@@ -496,6 +539,9 @@ def check_files():
     if not fileIO("data/rolls/active.json", "check"):
         print("Creating default active.json...")
         fileIO("data/rolls/active.json", "save", activity)
+    if not fileIO("data/rolls/counter.json", "check"):
+        print("Creating default counter.json...")
+        fileIO("data/rolls/counter.json", "save", counter)
     # endregion
 
 
