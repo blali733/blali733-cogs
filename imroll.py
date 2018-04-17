@@ -261,10 +261,10 @@ class ImRoll:
 
         lock = asyncio.Lock()
         await asyncio.gather(
-            self.image_get(ctx, server, channel, "loli", lock) if self.active["loli"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "dan", lock) if self.active["dan"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "gel", lock) if self.active["gel"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "kona", lock) if self.active["kona"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "loli", lock) if self.active["current"]["loli"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "dan", lock) if self.active["current"]["dan"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
         )
 
     @commands.command(pass_context=True, no_pm=True)
@@ -278,10 +278,14 @@ class ImRoll:
         await self.add_fap(ctx)
 
         await asyncio.gather(
-            self.image_get(ctx, server, channel, "loli", False, False) if self.active["loli"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "dan", False, False) if self.active["dan"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "gel", False, False) if self.active["gel"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "kona", False, False) if self.active["kona"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
+                                                                              "loli"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "dan", False, False) if self.active["current"][
+                                                                             "dan"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "gel", False, False) if self.active["current"][
+                                                                             "gel"] == "true" else dummy(),
+            self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
+                                                                              "kona"] == "true" else dummy(),
         )
     # endregion
 
@@ -328,33 +332,56 @@ class ImRoll:
     async def configrolls(self, ctx):
         if ctx.invoked_subcommand is None:
             self.active = fileIO("data/rolls/active.json", "load")
-            await self.bot.say(self.active)
+            await self.bot.say("```{}```".format(self.active["current"]))
 
     async def toggle_switch(self, mode):
         self.active = fileIO("data/rolls/active.json", "load")
-        if self.active[mode] == "true":
-            self.active[mode] = "false"
+        if self.active["current"][mode] == "true":
+            self.active["current"][mode] = "false"
             await self.bot.say(mode + " - disabled!")
         else:
-            self.active[mode] = "true"
+            self.active["current"][mode] = "true"
             await self.bot.say(mode + " - enabled!")
         fileIO("data/rolls/active.json", "save", self.active)
 
     @configrolls.command(name="loli", pass_context=True, no_pm=True)
+    @checks.is_owner()
     async def _loli_switch(self, ctx, *text):
         await self.toggle_switch("loli")
 
     @configrolls.command(name="kona", pass_context=True, no_pm=True)
+    @checks.is_owner()
     async def _kona_switch(self, ctx, *text):
         await self.toggle_switch("kona")
 
     @configrolls.command(name="dan", pass_context=True, no_pm=True)
+    @checks.is_owner()
     async def _dan_switch(self, ctx, *text):
         await self.toggle_switch("dan")
 
     @configrolls.command(name="gel", pass_context=True, no_pm=True)
+    @checks.is_owner()
     async def _gel_switch(self, ctx, *text):
         await self.toggle_switch("gel")
+
+    @commands.command(no_pm=True)
+    @checks.is_owner()
+    async def killswitch(self):
+        if self.active["killed"] != "True":
+            self.active["backup"] = self.active["current"]
+            self.active["current"] = {"loli": "false", "kona": "false", "gel": "false", "dan": "false"}
+            self.active["killed"] = "True"
+            fileIO("data/rolls/active.json", "save", self.active)
+            await self.bot.say("Disabled")
+
+    @commands.command(no_pm=True)
+    @checks.is_owner()
+    async def dekillswitch(self):
+        if self.active["killed"] == "True":
+            self.active["current"] = self.active["backup"]
+            self.active["killed"] = "False"
+            fileIO("data/rolls/active.json", "save", self.active)
+            await self.bot.say("Enabled")
     # endregion
 
     # region Support functions
@@ -561,7 +588,9 @@ def check_files():
     filters = {"default": {"loli": ["rating:safe"], "gel": ["rating:safe"], "dan": ["rating:safe"],
                            "kona": ["rating:safe"]}}
     settings = {"maxfilters": {"loli": "50", "gel": "10", "dan": "50", "kona": "50"}}
-    activity = {"loli": "true", "kona": "true", "gel": "true", "dan": "true"}
+    activity = {"current": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
+                "backup": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
+                "killed": "False"}
     counter = {"default": {"date": date}}
 
     # region File checking
