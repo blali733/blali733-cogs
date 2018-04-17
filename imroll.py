@@ -181,21 +181,47 @@ class ImRoll:
         if server.id not in self.counter:
             await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
         else:
-            names = sorted(self.counter[server.id]["values"].items(), key=operator.itemgetter(1), reverse=True)
+            ovals = self.counter[server.id]["values"].items()
+            vals = []
+            for mtuple in ovals:
+                vals.append((mtuple[0], int(mtuple[1])))
+            names = sorted(vals, key=operator.itemgetter(1), reverse=True)
             list_tags = ""
-            for tuple in names:
-                list_tags += "{} - {}\n".format(tuple[0], tuple[1])
+            for mtuple in names:
+                list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
             await self.bot.say(
-                "Since {}, Zone-tan kept track of your faps:: ```\n{}```".format(self.counter[server.id]["date"],
+                "Since {}, Zone-tan kept track of your faps: ```\n{}```".format(self.counter[server.id]["date"],
                                                                                  list_tags))
+            ovals = self.counter[server.id]["yesterday"].items()
+            vals = []
+            for mtuple in ovals:
+                vals.append((mtuple[0], int(mtuple[1])))
+            names = sorted(vals, key=operator.itemgetter(1), reverse=True)
+            list_tags = ""
+            for mtuple in names:
+                list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
+            await self.bot.say(
+                "Yesterday: ```\n{}```".format(list_tags))
+            ovals = self.counter[server.id]["today"].items()
+            vals = []
+            for mtuple in ovals:
+                vals.append((mtuple[0], int(mtuple[1])))
+            names = sorted(vals, key=operator.itemgetter(1), reverse=True)
+            list_tags = ""
+            for mtuple in names:
+                list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
+            await self.bot.say(
+                "Today: ```\n{}```".format(list_tags))
 
     async def add_fap(self, ctx):
         server = ctx.message.server
         user = ctx.message.author.name
+        now = datetime.datetime.now()
+        long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
         if server.id not in self.counter:
-            now = datetime.datetime.now()
             date = "{}.{}.{}".format(now.day, now.month, now.year)
-            self.counter[server.id] = {"date": date, "values": {}}
+            log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
+            self.counter[server.id] = {"date": date, "roll_date": log_roll_date, "values": {}, "yesterday": {}, "today": {}}
             fileIO("data/rolls/counter.json", "save", self.counter)
             self.counter = fileIO("data/rolls/counter.json", "load")
         if user not in self.counter[server.id]["values"]:
@@ -204,6 +230,21 @@ class ImRoll:
         else:
             # Trust me, I am engineer ^^
             self.counter[server.id]["values"][user] = str(int(self.counter[server.id]["values"][user])+1)
+            fileIO("data/rolls/counter.json", "save", self.counter)
+        last_log_roll = datetime.datetime.strptime(self.counter[server.id]["roll_date"], "%d.%m.%Y %H:%M")
+        current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
+        if current_time - last_log_roll >= datetime.timedelta(days=1):
+            self.counter[server.id]["yesterday"] = self.counter[server.id]["today"]
+            self.counter[server.id]["today"] = {}
+            log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
+            self.counter[server.id]["roll_date"] = log_roll_date
+            fileIO("data/rolls/counter.json", "save", self.counter)
+        if user not in self.counter[server.id]["today"]:
+            self.counter[server.id]["today"][user] = "1"
+            fileIO("data/rolls/counter.json", "save", self.counter)
+        else:
+            # Trust me, I am engineer ^^
+            self.counter[server.id]["today"][user] = str(int(self.counter[server.id]["today"][user])+1)
             fileIO("data/rolls/counter.json", "save", self.counter)
     # endregion
 
