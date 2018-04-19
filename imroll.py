@@ -190,7 +190,7 @@ class ImRoll:
             for mtuple in names:
                 list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
             await self.bot.say(
-                "Since {}, Zone-tan kept track of your faps: ```\n{}```".format(self.counter[server.id]["date"],
+                "Since {}, Zone-tan kept track of your faps: ```\n👑{}```".format(self.counter[server.id]["date"],
                                                                                  list_tags))
             ovals = self.counter[server.id]["yesterday"].items()
             vals = []
@@ -201,7 +201,7 @@ class ImRoll:
             for mtuple in names:
                 list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
             await self.bot.say(
-                "Yesterday: ```\n{}```".format(list_tags))
+                "Yesterday: ```\n👑{}```".format(list_tags))
             ovals = self.counter[server.id]["today"].items()
             vals = []
             for mtuple in ovals:
@@ -211,7 +211,7 @@ class ImRoll:
             for mtuple in names:
                 list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
             await self.bot.say(
-                "Today: ```\n{}```".format(list_tags))
+                "Today: ```\n👑{}```".format(list_tags))
 
     async def add_fap(self, ctx):
         server = ctx.message.server
