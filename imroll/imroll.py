@@ -303,6 +303,8 @@ class ImRoll:
                 self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
                 self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
             )
+        else:
+            await self.bot.say("I am NOT talking with you pervert!")
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
@@ -326,6 +328,8 @@ class ImRoll:
                 self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
                                                                                   "kona"] == "true" else dummy(),
             )
+        else:
+            await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
     # endregion
 
     # region Single rolls
@@ -339,6 +343,8 @@ class ImRoll:
             self.settings = fileIO("data/rolls/settings.json", "load")
 
             await self.image_get(ctx, server, channel, "loli", False, False)
+        else:
+            await self.bot.say("I am calling the police!")
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
@@ -350,6 +356,8 @@ class ImRoll:
             self.settings = fileIO("data/rolls/settings.json", "load")
 
             await self.image_get(ctx, server, channel, "dan", False, False)
+        else:
+            await self.bot.say("Be gone!")
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
@@ -361,6 +369,8 @@ class ImRoll:
             self.settings = fileIO("data/rolls/settings.json", "load")
 
             await self.image_get(ctx, server, channel, "gel", False, False)
+        else:
+            await self.bot.say("Addict!")
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
@@ -372,6 +382,8 @@ class ImRoll:
             self.settings = fileIO("data/rolls/settings.json", "load")
 
             await self.image_get(ctx, server, channel, "kona", False, False)
+        else:
+            await self.bot.say("Go away you baka!")
     # endregion
 
     # region Configrolls
