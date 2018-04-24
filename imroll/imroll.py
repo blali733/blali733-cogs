@@ -182,7 +182,7 @@ class ImRoll:
         current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
         return current_time - event_time
 
-    async def check_ban(self, user, server_id, now):
+    async def check_ban(self, user, server_id):
         now = datetime.datetime.now()
         if user not in self.bans[server_id]["ban"]:
             return False
@@ -276,7 +276,7 @@ class ImRoll:
                 if user not in self.bans[server.id]["whitelist"]:
                     await self.bot.say("You are not allowed to fap for next {} day(s)"
                                        .format(self.bans[server.id]["rules"]["VACation"]))
-                    self.bans[server.id]["ban"][user] = long_date
+                    self.bans[server.id]["ban"][user] = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
                     fileIO("data/rolls/bans.json", "save", self.bans)
                 else:
                     await self.bot.say("Your reputation lets you avoid punishment.")
@@ -288,40 +288,44 @@ class ImRoll:
     async def imroll(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
-        self.active = fileIO("data/rolls/active.json", "load")
-        self.counter = fileIO("data/rolls/counter.json", "load")
-        await self.add_fap(ctx)
+        user = ctx.message.author.name
+        if not await self.check_ban(user, server.id):
+            self.filters = fileIO("data/rolls/filters.json", "load")
+            self.settings = fileIO("data/rolls/settings.json", "load")
+            self.active = fileIO("data/rolls/active.json", "load")
+            self.counter = fileIO("data/rolls/counter.json", "load")
+            await self.add_fap(ctx)
 
-        lock = asyncio.Lock()
-        await asyncio.gather(
-            self.image_get(ctx, server, channel, "loli", lock) if self.active["current"]["loli"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "dan", lock) if self.active["current"]["dan"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
-        )
+            lock = asyncio.Lock()
+            await asyncio.gather(
+                self.image_get(ctx, server, channel, "loli", lock) if self.active["current"]["loli"] == "true" else dummy(),
+                self.image_get(ctx, server, channel, "dan", lock) if self.active["current"]["dan"] == "true" else dummy(),
+                self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
+                self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
+            )
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
-        self.active = fileIO("data/rolls/active.json", "load")
-        self.counter = fileIO("data/rolls/counter.json", "load")
-        await self.add_fap(ctx)
+        user = ctx.message.author.name
+        if not await self.check_ban(user, server.id):
+            self.filters = fileIO("data/rolls/filters.json", "load")
+            self.settings = fileIO("data/rolls/settings.json", "load")
+            self.active = fileIO("data/rolls/active.json", "load")
+            self.counter = fileIO("data/rolls/counter.json", "load")
+            await self.add_fap(ctx)
 
-        await asyncio.gather(
-            self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
-                                                                              "loli"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "dan", False, False) if self.active["current"][
-                                                                             "dan"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "gel", False, False) if self.active["current"][
-                                                                             "gel"] == "true" else dummy(),
-            self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
-                                                                              "kona"] == "true" else dummy(),
-        )
+            await asyncio.gather(
+                self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
+                                                                                  "loli"] == "true" else dummy(),
+                self.image_get(ctx, server, channel, "dan", False, False) if self.active["current"][
+                                                                                 "dan"] == "true" else dummy(),
+                self.image_get(ctx, server, channel, "gel", False, False) if self.active["current"][
+                                                                                 "gel"] == "true" else dummy(),
+                self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
+                                                                                  "kona"] == "true" else dummy(),
+            )
     # endregion
 
     # region Single rolls
@@ -329,37 +333,45 @@ class ImRoll:
     async def lolirs(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
+        user = ctx.message.author.name
+        if not await self.check_ban(user, server.id):
+            self.filters = fileIO("data/rolls/filters.json", "load")
+            self.settings = fileIO("data/rolls/settings.json", "load")
 
-        await self.image_get(ctx, server, channel, "loli", False, False)
+            await self.image_get(ctx, server, channel, "loli", False, False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
+        user = ctx.message.author.name
+        if not await self.check_ban(user, server.id):
+            self.filters = fileIO("data/rolls/filters.json", "load")
+            self.settings = fileIO("data/rolls/settings.json", "load")
 
-        await self.image_get(ctx, server, channel, "dan", False, False)
+            await self.image_get(ctx, server, channel, "dan", False, False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
+        user = ctx.message.author.name
+        if not await self.check_ban(user, server.id):
+            self.filters = fileIO("data/rolls/filters.json", "load")
+            self.settings = fileIO("data/rolls/settings.json", "load")
 
-        await self.image_get(ctx, server, channel, "gel", False, False)
+            await self.image_get(ctx, server, channel, "gel", False, False)
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
         server = ctx.message.server
         channel = ctx.message.channel
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
+        user = ctx.message.author.name
+        if not await self.check_ban(user, server.id):
+            self.filters = fileIO("data/rolls/filters.json", "load")
+            self.settings = fileIO("data/rolls/settings.json", "load")
 
-        await self.image_get(ctx, server, channel, "kona", False, False)
+            await self.image_get(ctx, server, channel, "kona", False, False)
     # endregion
 
     # region Configrolls
