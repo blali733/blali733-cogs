@@ -6,8 +6,8 @@ import discord
 import sys
 from discord.ext import commands
 
-from utils import checks
-from utils.dataIO import fileIO
+from .utils import checks
+from .utils.dataIO import fileIO
 import os
 import asyncio
 from __main__ import send_cmd_help
@@ -181,6 +181,16 @@ class ImRoll:
         if server.id not in self.counter:
             await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
         else:
+            now = datetime.datetime.now()
+            long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
+            last_log_roll = datetime.datetime.strptime(self.counter[server.id]["roll_date"], "%d.%m.%Y %H:%M")
+            current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
+            if current_time - last_log_roll >= datetime.timedelta(days=1):
+                self.counter[server.id]["yesterday"] = self.counter[server.id]["today"]
+                self.counter[server.id]["today"] = {}
+                log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
+                self.counter[server.id]["roll_date"] = log_roll_date
+                fileIO("data/rolls/counter.json", "save", self.counter)
             ovals = self.counter[server.id]["values"].items()
             vals = []
             for mtuple in ovals:
