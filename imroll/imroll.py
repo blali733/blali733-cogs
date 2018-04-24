@@ -188,7 +188,7 @@ class ImRoll:
             return False
         else:
             time_delta = await self.check_time(self.bans[server_id]["ban"][user], now)
-            if time_delta >= datetime.timedelta(days=self.bans[server_id]["rules"]["VACation"]):
+            if time_delta >= datetime.timedelta(days=int(self.bans[server_id]["rules"]["VACation"])):
                 del self.bans[server_id]["ban"][user]
                 fileIO("data/rolls/bans.json", "save", self.bans)
                 return False
