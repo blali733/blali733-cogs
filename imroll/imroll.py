@@ -175,22 +175,29 @@ class ImRoll:
     # endregion
 
     # region Counter
+    async def check_time(self, date_string, now):
+        long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
+        event_time = datetime.datetime.strptime(date_string, "%d.%m.%Y %H:%M")
+        current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
+        return current_time - event_time
+
+    async def log_roll(self, server_id):
+        now = datetime.datetime.now()
+        time_delta = await self.check_time(self.counter[server_id]["roll_date"], now)
+        if time_delta >= datetime.timedelta(days=1):
+            self.counter[server_id]["yesterday"] = self.counter[server_id]["today"]
+            self.counter[server_id]["today"] = {}
+            log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
+            self.counter[server_id]["roll_date"] = log_roll_date
+            fileIO("data/rolls/counter.json", "save", self.counter)
+
     @commands.command(pass_context=True, no_pm=True)
     async def fapcounter(self, ctx, *text):
         server = ctx.message.server
         if server.id not in self.counter:
             await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
         else:
-            now = datetime.datetime.now()
-            long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
-            last_log_roll = datetime.datetime.strptime(self.counter[server.id]["roll_date"], "%d.%m.%Y %H:%M")
-            current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
-            if current_time - last_log_roll >= datetime.timedelta(days=1):
-                self.counter[server.id]["yesterday"] = self.counter[server.id]["today"]
-                self.counter[server.id]["today"] = {}
-                log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
-                self.counter[server.id]["roll_date"] = log_roll_date
-                fileIO("data/rolls/counter.json", "save", self.counter)
+            await self.log_roll(server.id)
             ovals = self.counter[server.id]["values"].items()
             vals = []
             for mtuple in ovals:
@@ -241,14 +248,7 @@ class ImRoll:
             # Trust me, I am engineer ^^
             self.counter[server.id]["values"][user] = str(int(self.counter[server.id]["values"][user])+1)
             fileIO("data/rolls/counter.json", "save", self.counter)
-        last_log_roll = datetime.datetime.strptime(self.counter[server.id]["roll_date"], "%d.%m.%Y %H:%M")
-        current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
-        if current_time - last_log_roll >= datetime.timedelta(days=1):
-            self.counter[server.id]["yesterday"] = self.counter[server.id]["today"]
-            self.counter[server.id]["today"] = {}
-            log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
-            self.counter[server.id]["roll_date"] = log_roll_date
-            fileIO("data/rolls/counter.json", "save", self.counter)
+        await self.log_roll(server.id)
         if user not in self.counter[server.id]["today"]:
             self.counter[server.id]["today"][user] = "1"
             fileIO("data/rolls/counter.json", "save", self.counter)
