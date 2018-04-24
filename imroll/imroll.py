@@ -233,6 +233,9 @@ class ImRoll:
 
     async def add_fap(self, ctx):
         server = ctx.message.server
+        if server.id not in self.bans:
+            self.bans[server.id] = self.bans["default"]
+            fileIO("data/rolls/bans.json", "save", self.bans)
         user = ctx.message.author.name
         now = datetime.datetime.now()
         long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
@@ -609,7 +612,7 @@ def check_files():
                 "backup": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
                 "killed": "False"}
     counter = {"default": {"date": date}}
-    banned = {"ban": {}, "whitelist": [], "rules": {"daily": "50", "VACation": "7"}}
+    banned = {"default": {"ban": {}, "whitelist": [], "rules": {"daily": "50", "VACation": "7"}}}
 
     # region File checking
     if not fileIO("data/rolls/filters.json", "check"):
@@ -632,7 +635,7 @@ def check_files():
         fileIO("data/rolls/counter.json", "save", counter)
     if not fileIO("data/rolls/bans.json", "check"):
         print("Creating default bans.json...")
-        fileIO("data/rolls/bans.json", "save", counter)
+        fileIO("data/rolls/bans.json", "save", banned)
     # endregion
 
 
