@@ -182,6 +182,19 @@ class ImRoll:
         current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
         return current_time - event_time
 
+    async def check_ban(self, user, server_id, now):
+        now = datetime.datetime.now()
+        if user not in self.bans[server_id]["ban"]:
+            return False
+        else:
+            time_delta = await self.check_time(self.bans[server_id]["ban"][user], now)
+            if time_delta >= datetime.timedelta(days=self.bans[server_id]["rules"]["VACation"]):
+                del self.bans[server_id]["ban"][user]
+                fileIO("data/rolls/bans.json", "save", self.bans)
+                return False
+            else:
+                return True
+
     async def log_roll(self, server_id):
         now = datetime.datetime.now()
         time_delta = await self.check_time(self.counter[server_id]["roll_date"], now)
@@ -263,8 +276,10 @@ class ImRoll:
                 if user not in self.bans[server.id]["whitelist"]:
                     await self.bot.say("You are not allowed to fap for next {} day(s)"
                                        .format(self.bans[server.id]["rules"]["VACation"]))
+                    self.bans[server.id]["ban"][user] = long_date
+                    fileIO("data/rolls/bans.json", "save", self.bans)
                 else:
-                    await self.bot.say("Your reputation lets you avoid banishment.")
+                    await self.bot.say("Your reputation lets you avoid punishment.")
             fileIO("data/rolls/counter.json", "save", self.counter)
     # endregion
 
