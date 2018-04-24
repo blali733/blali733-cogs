@@ -22,6 +22,7 @@ class ImRoll:
         self.settings = fileIO("data/rolls/settings.json", "load")
         self.active = fileIO("data/rolls/active.json", "load")
         self.counter = fileIO("data/rolls/counter.json", "load")
+        self.bans = fileIO("data/rolls/bans.json", "load")
         self.phrases = {
             "loli": {"random": "+order%3Arandom",
                      "call": "https://lolibooru.moe/post/index.json?limit=1&tags=",
@@ -255,6 +256,12 @@ class ImRoll:
         else:
             # Trust me, I am engineer ^^
             self.counter[server.id]["today"][user] = str(int(self.counter[server.id]["today"][user])+1)
+            if int(self.counter[server.id]["today"][user]) > int(self.bans[server.id]["rules"]["daily"]):
+                if user not in self.bans[server.id]["whitelist"]:
+                    await self.bot.say("You are not allowed to fap for next {} day(s)"
+                                       .format(self.bans[server.id]["rules"]["VACation"]))
+                else:
+                    await self.bot.say("Your reputation lets you avoid banishment.")
             fileIO("data/rolls/counter.json", "save", self.counter)
     # endregion
 
@@ -602,6 +609,7 @@ def check_files():
                 "backup": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
                 "killed": "False"}
     counter = {"default": {"date": date}}
+    banned = {"ban": {}, "whitelist": [], "rules": {"daily": "50", "VACation": "7"}}
 
     # region File checking
     if not fileIO("data/rolls/filters.json", "check"):
@@ -622,6 +630,9 @@ def check_files():
     if not fileIO("data/rolls/counter.json", "check"):
         print("Creating default counter.json...")
         fileIO("data/rolls/counter.json", "save", counter)
+    if not fileIO("data/rolls/bans.json", "check"):
+        print("Creating default bans.json...")
+        fileIO("data/rolls/bans.json", "save", counter)
     # endregion
 
 
