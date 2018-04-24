@@ -6,8 +6,8 @@ import discord
 import sys
 from discord.ext import commands
 
-from .utils import checks
-from .utils.dataIO import fileIO
+from utils import checks
+from utils.dataIO import fileIO
 import os
 import asyncio
 from __main__ import send_cmd_help
