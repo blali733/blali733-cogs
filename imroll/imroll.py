@@ -222,10 +222,9 @@ class ImRoll:
         """
         Displays statistics of imroll command usage (or it's abuse).
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         if server.id not in self.counter:
-            await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
+            await self.bot.say(self.get_random_string("stats_empty"))
         else:
             await self.log_roll(server.id)
             order = ["values", "yesterday", "today"]
@@ -239,11 +238,10 @@ class ImRoll:
                 for mtuple in names:
                     list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
                 if mode is "values":
-                    await self.bot.say(
-                                        "Since {}, Zone-tan kept track of your faps: ```\n👑{}```"
-                                        .format(self.counter[server.id]["date"], list_tags))
+                    await self.bot.say(self.get_random_string("stats_overall")
+                                       .format(self.counter[server.id]["date"], list_tags))
                 else:
-                    await self.bot.say("{}: ```\n👑{}```".format(mode.title(), list_tags))
+                    await self.bot.say(self.get_random_string("stats_daily").format(mode.title(), list_tags))
 
     async def add_roll(self, ctx):
         """
@@ -786,7 +784,9 @@ def update_strings():
         "GTFO": ["You are banned!"],
         "ban_given": ["You are banned for next {} day(s)"],
         "ban_evaded": ["Your reputation lets you avoid punishment."],
-
+        "stats_empty": ["No statistics for this server."],
+        "stats_overall": ["Since {}, following users rolled: ```\n👑{}```"],
+        "stats_daily": ["{}: ```\n👑{}```"],
     }
 
     if not fileIO("data/rolls/strings.json", "check"):
