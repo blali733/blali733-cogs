@@ -69,38 +69,18 @@ class ImRoll:
         """
         # TODO - implement checking if file exists!
         # TODO - refactor to use strings repository
-        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id not in self.filters:
             self.filters[server.id] = self.filters["default"]
-        vals = fileIO("data/loli/filters.json", "load")
-        if server.id in vals:
-            self.filters[server.id]["loli"] = vals[server.id]
-            fileIO("data/rolls/filters.json", "save", self.filters)
-            self.filters = fileIO("data/rolls/filters.json", "load")
-        else:
-            await self.bot.say("Loli filters not found!")
-        vals = fileIO("data/kona/filters.json", "load")
-        if server.id in vals:
-            self.filters[server.id]["kona"] = vals[server.id]
-            fileIO("data/rolls/filters.json", "save", self.filters)
-            self.filters = fileIO("data/rolls/filters.json", "load")
-        else:
-            await self.bot.say("Kona filters not found!")
-        vals = fileIO("data/gel/filters.json", "load")
-        if server.id in vals:
-            self.filters[server.id]["gel"] = vals[server.id]
-            fileIO("data/rolls/filters.json", "save", self.filters)
-            self.filters = fileIO("data/rolls/filters.json", "load")
-        else:
-            await self.bot.say("Gel filters not found!")
-        vals = fileIO("data/dan/filters.json", "load")
-        if server.id in vals:
-            self.filters[server.id]["dan"] = vals[server.id]
-            fileIO("data/rolls/filters.json", "save", self.filters)
-            self.filters = fileIO("data/rolls/filters.json", "load")
-        else:
-            await self.bot.say("Dan filters not found!")
+        order = ["loli", "dan", "kona", "gel"]
+        for server_name in order:
+            vals = fileIO("data/{}/filters.json".format(server_name), "load")
+            if server.id in vals:
+                self.filters[server.id][server_name] = vals[server.id]
+                fileIO("data/rolls/filters.json", "save", self.filters)
+                self.filters = fileIO("data/rolls/filters.json", "load")
+            else:
+                await self.bot.say("{} filters not found!".format(server_name))
 
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
