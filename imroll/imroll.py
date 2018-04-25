@@ -574,9 +574,9 @@ class ImRoll:
         Fetches image from specified server, and passes result messages to specified server.
         """
         # TODO - refactor to use strings repository
-        # TODO - rework deprecated aiohttp.get() function
         search_phrase = self.phrases[mode]["call"]
         tag_list = ''
+        httpclient = aiohttp.ClientSession()
 
         # Assign tags to URL
         if server.id in self.filters:
@@ -601,7 +601,7 @@ class ImRoll:
             # region Gelbooru
             try:
                 # Fetch the xml page to randomize the results
-                async with aiohttp.get(search_phrase) as r:
+                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
                     website = await r.text()
 
                 # Gets the amount of results
@@ -613,7 +613,7 @@ class ImRoll:
                 pid = str(random.randint(0, int(count)))
                 search_phrase += "&json=1&pid={}".format(pid)
                 # Fetches the json page
-                async with aiohttp.get(search_phrase) as r:
+                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
                     page = await r.json()
                 if page:
                     # Sets the image URL
@@ -634,7 +634,7 @@ class ImRoll:
         elif mode is "dan":
             # region Danbooru
             try:
-                async with aiohttp.get(search_phrase) as d:
+                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as d:
                     page = await d.json()
                 if page:
                     if "success" not in page:
@@ -672,7 +672,7 @@ class ImRoll:
         else:
             # region Lolibooru / Konachan
             try:
-                async with aiohttp.get(search_phrase) as r:
+                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
                     page = await r.json()
                 if page:
                     # Sets the image URL
