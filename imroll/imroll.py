@@ -52,10 +52,10 @@ class ImRoll:
         }
 
     # region Strings
-    async def get_random_string(self, string_type):
+    def get_random_string(self, string_type):
         return self.strings[string_type][random.randint(0, len(self.strings[string_type])-1)]
 
-    async def get_string(self, string_type, iterator):
+    def get_string(self, string_type, iterator):
         return self.strings[string_type][iterator]
     # endregion
 
@@ -177,7 +177,7 @@ class ImRoll:
     # endregion
 
     # region Counter
-    async def check_time(self, date_string, now):
+    def check_time(self, date_string, now):
         """
         Returns timedelta between date_string and now.
         """
@@ -186,7 +186,7 @@ class ImRoll:
         current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
         return current_time - event_time
 
-    async def check_ban(self, user, server_id):
+    def check_ban(self, user, server_id):
         """
         Checks if user is banned or not.
 
@@ -196,7 +196,7 @@ class ImRoll:
         if user not in self.bans[server_id]["ban"]:
             return False
         else:
-            time_delta = await self.check_time(self.bans[server_id]["ban"][user], now)
+            time_delta = self.check_time(self.bans[server_id]["ban"][user], now)
             if time_delta >= datetime.timedelta(days=int(self.bans[server_id]["rules"]["VACation"])):
                 del self.bans[server_id]["ban"][user]
                 fileIO("data/rolls/bans.json", "save", self.bans)
@@ -209,7 +209,7 @@ class ImRoll:
         Checks if day passed since last change of log roll, and performs it if necessary.
         """
         now = datetime.datetime.now()
-        time_delta = await self.check_time(self.counter[server_id]["roll_date"], now)
+        time_delta = self.check_time(self.counter[server_id]["roll_date"], now)
         if time_delta >= datetime.timedelta(days=1):
             self.counter[server_id]["yesterday"] = self.counter[server_id]["today"]
             self.counter[server_id]["today"] = {}
@@ -299,7 +299,7 @@ class ImRoll:
         channel = ctx.message.channel
         user = ctx.message.author.name
         if self.active["killed"] != "True":
-            if not await self.check_ban(user, server.id):
+            if not self.check_ban(user, server.id):
                 self.filters = fileIO("data/rolls/filters.json", "load")
                 self.settings = fileIO("data/rolls/settings.json", "load")
                 self.active = fileIO("data/rolls/active.json", "load")
@@ -316,7 +316,7 @@ class ImRoll:
             else:
                 await self.bot.say("I am NOT talking with you pervert!")
         else:
-            await self.bot.say(await self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
@@ -328,7 +328,7 @@ class ImRoll:
         channel = ctx.message.channel
         user = ctx.message.author.name
         if self.active["killed"] != "True":
-            if not await self.check_ban(user, server.id):
+            if not self.check_ban(user, server.id):
                 self.filters = fileIO("data/rolls/filters.json", "load")
                 self.settings = fileIO("data/rolls/settings.json", "load")
                 self.active = fileIO("data/rolls/active.json", "load")
@@ -348,7 +348,7 @@ class ImRoll:
             else:
                 await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
         else:
-            await self.bot.say(await self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled"))
     # endregion
 
     # region Single rolls
@@ -362,7 +362,7 @@ class ImRoll:
         channel = ctx.message.channel
         user = ctx.message.author.name
         if self.active["killed"] != "True":
-            if not await self.check_ban(user, server.id):
+            if not self.check_ban(user, server.id):
                 self.filters = fileIO("data/rolls/filters.json", "load")
                 self.settings = fileIO("data/rolls/settings.json", "load")
 
@@ -370,7 +370,7 @@ class ImRoll:
             else:
                 await self.bot.say("I am calling the police!")
         else:
-            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
+            await self.bot.say(self.get_random_string("disabled"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
@@ -382,7 +382,7 @@ class ImRoll:
         channel = ctx.message.channel
         user = ctx.message.author.name
         if self.active["killed"] != "True":
-            if not await self.check_ban(user, server.id):
+            if not self.check_ban(user, server.id):
                 self.filters = fileIO("data/rolls/filters.json", "load")
                 self.settings = fileIO("data/rolls/settings.json", "load")
 
@@ -390,7 +390,7 @@ class ImRoll:
             else:
                 await self.bot.say("Be gone!")
         else:
-            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
+            await self.bot.say(self.get_random_string("disabled"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
@@ -402,7 +402,7 @@ class ImRoll:
         channel = ctx.message.channel
         user = ctx.message.author.name
         if self.active["killed"] != "True":
-            if not await self.check_ban(user, server.id):
+            if not self.check_ban(user, server.id):
                 self.filters = fileIO("data/rolls/filters.json", "load")
                 self.settings = fileIO("data/rolls/settings.json", "load")
 
@@ -410,7 +410,7 @@ class ImRoll:
             else:
                 await self.bot.say("Addict!")
         else:
-            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
+            await self.bot.say(self.get_random_string("disabled"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
@@ -422,7 +422,7 @@ class ImRoll:
         channel = ctx.message.channel
         user = ctx.message.author.name
         if self.active["killed"] != "True":
-            if not await self.check_ban(user, server.id):
+            if not self.check_ban(user, server.id):
                 self.filters = fileIO("data/rolls/filters.json", "load")
                 self.settings = fileIO("data/rolls/settings.json", "load")
 
@@ -430,7 +430,7 @@ class ImRoll:
             else:
                 await self.bot.say("Go away you baka!")
         else:
-            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
+            await self.bot.say(self.get_random_string("disabled"))
     # endregion
 
     # region Configrolls
@@ -561,7 +561,7 @@ class ImRoll:
             else:
                 await self.bot.say("Server is already using the default {} filter list.".format(mod))
 
-    async def get_details(self, page, iterator, mode):
+    def get_details(self, page, iterator, mode):
         """
         Generates embed message for image.
         """
@@ -596,7 +596,6 @@ class ImRoll:
         """
         Fetches image from specified server, and passes result messages to specified server.
         """
-        # TODO - refactor to use strings repository
         search_phrase = self.phrases[mode]["call"]
         tag_list = ''
         httpclient = aiohttp.ClientSession()
@@ -636,28 +635,31 @@ class ImRoll:
                 pid = str(random.randint(0, int(count)))
                 search_phrase += "&json=1&pid={}".format(pid)
                 # Fetches the json page
-                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
+                async with httpclient.get(search_phrase,
+                                          headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
                     page = await r.json()
                 if page:
                     # Sets the image URL
                     image_url = "{}".format(website[0]['file_url'])
 
-                    output = await self.get_details(page, 0, mode)
+                    output = self.get_details(page, 0, mode)
 
                     # Edits the pending message with the results
-                    await self.bot.edit_message(m1, "As requested by: {}".format(ctx.message.author.name), embed=output)
-                    await self.bot.edit_message(m2, "{}: {}".format(ctx.message.author.name, image_url))
+                    await self.bot.edit_message(m1, self.get_random_string("m1")
+                                                .format(ctx.message.author.name), embed=output)
+                    await self.bot.edit_message(m2, self.get_random_string("m2")
+                                                .format(ctx.message.author.name, image_url))
                 else:
-                    await self.bot.edit_message(m1, "Server gave no response.")
+                    await self.bot.edit_message(m1, self.get_random_string("no_response"))
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line: {}"
-                                                       .format(tb.tb_lineno))
+                return await self.bot.edit_message(m1, self.get_random_string("request_error").format(tb.tb_lineno))
             # endregion
         elif mode is "dan":
             # region Danbooru
             try:
-                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as d:
+                async with httpclient.get(search_phrase,
+                                          headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as d:
                     page = await d.json()
                 if page:
                     if "success" not in page:
@@ -672,46 +674,48 @@ class ImRoll:
                                 else:
                                     image_url = "https://danbooru.donmai.us{}".format(url)
 
-                                output = await self.get_details(page, index, mode)
+                                output = self.get_details(page, index, mode)
 
                                 # Edits the pending message with the results
-                                await self.bot.edit_message(m1, "As requested by: {}".format(ctx.message.author.name),
-                                                            embed=output)
-                                await self.bot.edit_message(m2, "{}: {}".format(ctx.message.author.name, image_url))
+                                await self.bot.edit_message(m1, self.get_random_string("m1")
+                                                            .format(ctx.message.author.name), embed=output)
+                                await self.bot.edit_message(m2, self.get_random_string("m2")
+                                                            .format(ctx.message.author.name, image_url))
                                 fuse = 1
                                 break
                         if fuse == 0:
-                            await self.bot.edit_message(m1, "Cannot find an image that can be viewed by you.")
+                            await self.bot.edit_message(m1, self.get_random_string("no_result"))
                     else:
                         # Edits the pending message with an error received by the server
                         await self.bot.edit_message(m1, "{}".format(page["message"]))
                 else:
-                    await self.bot.edit_message(m1, "Server gave no response.")
+                    await self.bot.edit_message(m1, self.get_random_string("no_response"))
             except:
                 mtype, obj, tb = sys.exc_info()
-                await self.bot.edit_message(m1, "Error during request processing. Exception raised in line: {}"
-                                                .format(tb.tb_lineno))
+                await self.bot.edit_message(m1, self.get_random_string("request_error").format(tb.tb_lineno))
             # endregion
         else:
             # region Lolibooru / Konachan
             try:
-                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
+                async with httpclient.get(search_phrase,
+                                          headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
                     page = await r.json()
                 if page:
                     # Sets the image URL
                     image_url = page[0].get("file_url").replace(' ', '+')
 
-                    output = await self.get_details(page, 0, mode)
+                    output = self.get_details(page, 0, mode)
 
                     # Edits the pending messages with the results
-                    await self.bot.edit_message(m1, "As requested by: {}".format(ctx.message.author.name), embed=output)
-                    await self.bot.edit_message(m2, "{}: {}".format(ctx.message.author.name, image_url))
+                    await self.bot.edit_message(m1, self.get_random_string("m1").format(ctx.message.author.name),
+                                                embed=output)
+                    await self.bot.edit_message(m2, self.get_random_string("m2").format(ctx.message.author.name,
+                                                                                        image_url))
                 else:
-                    return await self.bot.edit_message(m1, "Server gave no response.")
+                    return await self.bot.edit_message(m1, self.get_random_string("no_response"))
             except:
                 mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, "Error during request processing. Exception raised in line: {}"
-                                                       .format(tb.tb_lineno))
+                return await self.bot.edit_message(m1, self.get_random_string("request_error").format(tb.tb_lineno))
             # endregion
     # endregion
 
@@ -776,7 +780,12 @@ def update_strings():
     Creates and updates content of strings file.
     """
     strings = {
-        "disabled": ["I am out of order, sorry ;("]
+        "disabled": ["I am out of order, sorry ;("],
+        "no_response": ["Server gave no response."],
+        "m1": ["As requested by: {}"],
+        "m2": ["{}: {}"],
+        "request_error": ["Error during request processing. Exception raised in line: {}"],
+        "no_result": ["Cannot find an image that can be viewed by you."],
     }
 
     if not fileIO("data/rolls/strings.json", "check"):
