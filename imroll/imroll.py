@@ -527,20 +527,17 @@ class ImRoll:
             if tag not in self.filters[server.id][server_name]:
                 self.filters[server.id][server_name].append(tag)
                 fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say("Filter '{}' added to the server's {} filter list.".format(tag, server_name))
+                await self.bot.say(self.get_random_string("filter_add").format(tag, server_name))
             else:
-                await self.bot.say(
-                    "Filter '{}' is already in the server's {} filter list.".format(tag, server_name))
+                await self.bot.say(self.get_random_string("filter_exists").format(tag, server_name))
         else:
-            await self.bot.say("This server has exceeded the maximum filters ({}/{})."
-                               " https://www.youtube.com/watch?v=1MelZ7xaacs".format(
+            await self.bot.say(self.get_random_string("filter_max").format(
                                 len(self.filters[server.id][server_name]), self.settings["maxfilters"][server_name]))
 
     async def filter_del(self, ctx, mod, tag):
         """
-        Deletes tag from list of selected server.
+        Deletes tag from list of selected server. Reverts to default when no tag is given.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         if len(tag) > 0:
             if server.id not in self.filters:
@@ -550,16 +547,16 @@ class ImRoll:
             if tag in self.filters[server.id][mod]:
                 self.filters[server.id][mod].remove(tag)
                 fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say("Filter '{}' deleted from the server's {} filter list.".format(tag, mod))
+                await self.bot.say(self.get_random_string("filter_del").format(tag, mod))
             else:
-                await self.bot.say("Filter '{}' does not exist in the server's {} filter list.".format(tag, mod))
+                await self.bot.say(self.get_random_string("filter_not_existing").format(tag, mod))
         else:
             if server.id in self.filters:
                 del self.filters[server.id][mod]
                 fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say("Reverted the server to the default {} filter list.".format(mod))
+                await self.bot.say(self.get_random_string("filter_revert").format(mod))
             else:
-                await self.bot.say("Server is already using the default {} filter list.".format(mod))
+                await self.bot.say(self.get_random_string("filter_default").format(mod))
 
     def get_details(self, page, iterator, mode):
         """
@@ -786,6 +783,14 @@ def update_strings():
         "m2": ["{}: {}"],
         "request_error": ["Error during request processing. Exception raised in line: {}"],
         "no_result": ["Cannot find an image that can be viewed by you."],
+        "filter_add": ["Filter '{}' added to the server's {} filter list."],
+        "filter_exists": ["Filter '{}' is already in the server's {} filter list."],
+        "filter_max": ["This server has exceeded the maximum filters ({}/{})."],
+        "filter_del": ["Filter '{}' deleted from the server's {} filter list."],
+        "filter_not_existing": ["Filter '{}' does not exist in the server's {} filter list."],
+        "filter_revert": ["Reverted the server to the default {} filter list."],
+        "filter_default": ["Server is already using the default {} filter list."],
+
     }
 
     if not fileIO("data/rolls/strings.json", "check"):
