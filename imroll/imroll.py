@@ -23,6 +23,7 @@ class ImRoll:
         self.active = fileIO("data/rolls/active.json", "load")
         self.counter = fileIO("data/rolls/counter.json", "load")
         self.bans = fileIO("data/rolls/bans.json", "load")
+        self.strings = fileIO("data/rolls/strings.json", "load")
         self.phrases = {
             "loli": {"random": "+order%3Arandom",
                      "call": "https://lolibooru.moe/post/index.json?limit=1&tags=",
@@ -49,6 +50,14 @@ class ImRoll:
                      "m2": "Kona(ta) preview",
                      "title": "Konachan Image #{}"}
         }
+
+    # region Strings
+    async def get_random_string(self, string_type):
+        return self.strings[string_type][random.randint(0, len(self.strings[string_type])-1)]
+
+    async def get_string(self, string_type, iterator):
+        return self.strings[string_type][iterator]
+    # endregion
 
     # region Filters
     @commands.group(pass_context=True)
@@ -307,8 +316,7 @@ class ImRoll:
             else:
                 await self.bot.say("I am NOT talking with you pervert!")
         else:
-            await self.bot.say("I am out of order, sorry ;(")
-
+            await self.bot.say(await self.get_random_string("disabled"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
@@ -340,7 +348,7 @@ class ImRoll:
             else:
                 await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
         else:
-            await self.bot.say("I am out of order, sorry ;(")
+            await self.bot.say(await self.get_random_string("disabled"))
     # endregion
 
     # region Single rolls
@@ -362,7 +370,7 @@ class ImRoll:
             else:
                 await self.bot.say("I am calling the police!")
         else:
-            await self.bot.say("I am out of order, sorry ;(")
+            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
@@ -382,7 +390,7 @@ class ImRoll:
             else:
                 await self.bot.say("Be gone!")
         else:
-            await self.bot.say("I am out of order, sorry ;(")
+            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
@@ -402,7 +410,7 @@ class ImRoll:
             else:
                 await self.bot.say("Addict!")
         else:
-            await self.bot.say("I am out of order, sorry ;(")
+            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
@@ -422,7 +430,7 @@ class ImRoll:
             else:
                 await self.bot.say("Go away you baka!")
         else:
-            await self.bot.say("I am out of order, sorry ;(")
+            await self.bot.say(await self.bot.say(await self.get_random_string("disabled")))
     # endregion
 
     # region Configrolls
@@ -763,10 +771,31 @@ def check_files():
     # endregion
 
 
+def update_strings():
+    """
+    Creates and updates content of strings file.
+    """
+    strings = {
+        "disabled": ["I am out of order, sorry ;("]
+    }
+
+    if not fileIO("data/rolls/strings.json", "check"):
+        print("Creating default strings.json...")
+        fileIO("data/rolls/strings.json", "save", strings)
+    else:
+        print("Updating strings.json...")
+        file_strings = fileIO("data/rolls/strings.json", "load")
+        for key in strings:
+            if key not in file_strings:
+                file_strings[key] = strings[key]
+        fileIO("data/rolls/strings.json", "save", file_strings)
+
+
 def setup(bot):
     """
     Sets up cog to work properly.
     """
     check_folder()
     check_files()
+    update_strings()
     bot.add_cog(ImRoll(bot))
