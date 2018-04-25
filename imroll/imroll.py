@@ -316,7 +316,7 @@ class ImRoll:
             else:
                 await self.bot.say("I am NOT talking with you pervert!")
         else:
-            await self.bot.say(self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled_info"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
@@ -348,7 +348,7 @@ class ImRoll:
             else:
                 await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
         else:
-            await self.bot.say(self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled_info"))
     # endregion
 
     # region Single rolls
@@ -370,7 +370,7 @@ class ImRoll:
             else:
                 await self.bot.say("I am calling the police!")
         else:
-            await self.bot.say(self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled_info"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
@@ -390,7 +390,7 @@ class ImRoll:
             else:
                 await self.bot.say("Be gone!")
         else:
-            await self.bot.say(self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled_info"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
@@ -410,7 +410,7 @@ class ImRoll:
             else:
                 await self.bot.say("Addict!")
         else:
-            await self.bot.say(self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled_info"))
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
@@ -430,7 +430,7 @@ class ImRoll:
             else:
                 await self.bot.say("Go away you baka!")
         else:
-            await self.bot.say(self.get_random_string("disabled"))
+            await self.bot.say(self.get_random_string("disabled_info"))
     # endregion
 
     # region Configrolls
@@ -447,14 +447,13 @@ class ImRoll:
         """
         Switches state of server.
         """
-        # TODO - refactor to use strings repository
         self.active = fileIO("data/rolls/active.json", "load")
         if self.active["current"][server] == "true":
             self.active["current"][server] = "false"
-            await self.bot.say(server + " - disabled!")
+            await self.bot.say(self.get_random_string("sth_disabled").format(server))
         else:
             self.active["current"][server] = "true"
-            await self.bot.say(server + " - enabled!")
+            await self.bot.say(self.get_random_string("sth_enabled").format(server))
         fileIO("data/rolls/active.json", "save", self.active)
 
     @configrolls.command(name="loli", pass_context=True, no_pm=True)
@@ -777,7 +776,7 @@ def update_strings():
     Creates and updates content of strings file.
     """
     strings = {
-        "disabled": ["I am out of order, sorry ;("],
+        "disabled_info": ["I am out of order, sorry ;("],
         "no_response": ["Server gave no response."],
         "m1": ["As requested by: {}"],
         "m2": ["{}: {}"],
@@ -790,7 +789,8 @@ def update_strings():
         "filter_not_existing": ["Filter '{}' does not exist in the server's {} filter list."],
         "filter_revert": ["Reverted the server to the default {} filter list."],
         "filter_default": ["Server is already using the default {} filter list."],
-
+        "sth_disabled": ["{} - disabled!"],
+        "sth_enabled": ["{} - enabled!"]
     }
 
     if not fileIO("data/rolls/strings.json", "check"):
