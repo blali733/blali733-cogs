@@ -249,7 +249,6 @@ class ImRoll:
         """
         Adds performed roll to log.
         """
-        # TODO - refactor to use strings repository
         # TODO - remove code repetitions
         server = ctx.message.server
         if server.id not in self.bans:
@@ -279,12 +278,12 @@ class ImRoll:
             self.counter[server.id]["today"][user] = str(int(self.counter[server.id]["today"][user])+1)
             if int(self.counter[server.id]["today"][user]) > int(self.bans[server.id]["rules"]["daily"]):
                 if user not in self.bans[server.id]["whitelist"]:
-                    await self.bot.say("You are not allowed to fap for next {} day(s)"
+                    await self.bot.say(self.get_random_string("ban_given")
                                        .format(self.bans[server.id]["rules"]["VACation"]))
                     self.bans[server.id]["ban"][user] = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
                     fileIO("data/rolls/bans.json", "save", self.bans)
                 else:
-                    await self.bot.say("Your reputation lets you avoid punishment.")
+                    await self.bot.say(self.get_random_string("ban_eveded"))
             fileIO("data/rolls/counter.json", "save", self.counter)
     # endregion
 
@@ -510,7 +509,6 @@ class ImRoll:
         """
         Adds tag to list of active tags of server.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         if server.id not in self.filters:
             self.filters[server.id] = self.filters["default"]
@@ -786,6 +784,9 @@ def update_strings():
         "sth_disabled": ["{} - disabled!"],
         "sth_enabled": ["{} - enabled!"],
         "GTFO": ["You are banned!"],
+        "ban_given": ["You are banned for next {} day(s)"],
+        "ban_evaded": ["Your reputation lets you avoid punishment."],
+
     }
 
     if not fileIO("data/rolls/strings.json", "check"):
