@@ -67,20 +67,22 @@ class ImRoll:
         """
         Use this function to copy filter settings from existing installation of Alzarath's Booru-Cogs.
         """
-        # TODO - implement checking if file exists!
         # TODO - refactor to use strings repository
         server = ctx.message.server
         if server.id not in self.filters:
             self.filters[server.id] = self.filters["default"]
         order = ["loli", "dan", "kona", "gel"]
         for server_name in order:
-            vals = fileIO("data/{}/filters.json".format(server_name), "load")
-            if server.id in vals:
-                self.filters[server.id][server_name] = vals[server.id]
-                fileIO("data/rolls/filters.json", "save", self.filters)
-                self.filters = fileIO("data/rolls/filters.json", "load")
+            if fileIO("data/{}/filters.json".format(server_name), "check"):
+                vals = fileIO("data/{}/filters.json".format(server_name), "load")
+                if server.id in vals:
+                    self.filters[server.id][server_name] = vals[server.id]
+                    fileIO("data/rolls/filters.json", "save", self.filters)
+                    self.filters = fileIO("data/rolls/filters.json", "load")
+                else:
+                    await self.bot.say("{} filters not found!".format(server_name))
             else:
-                await self.bot.say("{} filters not found!".format(server_name))
+                await self.bot.say("{} module not found!".format(server_name))
 
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
