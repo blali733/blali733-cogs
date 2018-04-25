@@ -214,43 +214,27 @@ class ImRoll:
         Displays statistics of imroll command usage (or it's abuse).
         """
         # TODO - refactor to use strings repository
-        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id not in self.counter:
             await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
         else:
             await self.log_roll(server.id)
-            ovals = self.counter[server.id]["values"].items()
-            vals = []
-            for mtuple in ovals:
-                vals.append((mtuple[0], int(mtuple[1])))
-            names = sorted(vals, key=operator.itemgetter(1), reverse=True)
-            list_tags = ""
-            for mtuple in names:
-                list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
-            await self.bot.say(
-                "Since {}, Zone-tan kept track of your faps: ```\n👑{}```".format(self.counter[server.id]["date"],
-                                                                                 list_tags))
-            ovals = self.counter[server.id]["yesterday"].items()
-            vals = []
-            for mtuple in ovals:
-                vals.append((mtuple[0], int(mtuple[1])))
-            names = sorted(vals, key=operator.itemgetter(1), reverse=True)
-            list_tags = ""
-            for mtuple in names:
-                list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
-            await self.bot.say(
-                "Yesterday: ```\n👑{}```".format(list_tags))
-            ovals = self.counter[server.id]["today"].items()
-            vals = []
-            for mtuple in ovals:
-                vals.append((mtuple[0], int(mtuple[1])))
-            names = sorted(vals, key=operator.itemgetter(1), reverse=True)
-            list_tags = ""
-            for mtuple in names:
-                list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
-            await self.bot.say(
-                "Today: ```\n👑{}```".format(list_tags))
+            order = ["values", "yesterday", "today"]
+            for mode in order:
+                ovals = self.counter[server.id][mode].items()
+                vals = []
+                for mtuple in ovals:
+                    vals.append((mtuple[0], int(mtuple[1])))
+                names = sorted(vals, key=operator.itemgetter(1), reverse=True)
+                list_tags = ""
+                for mtuple in names:
+                    list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
+                if mode is "values":
+                    await self.bot.say(
+                                        "Since {}, Zone-tan kept track of your faps: ```\n👑{}```"
+                                        .format(self.counter[server.id]["date"], list_tags))
+                else:
+                    await self.bot.say("{}: ```\n👑{}```".format(mode.title(), list_tags))
 
     async def add_roll(self, ctx):
         """
