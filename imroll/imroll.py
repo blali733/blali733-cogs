@@ -76,7 +76,6 @@ class ImRoll:
         """
         Use this function to copy filter settings from existing installation of Alzarath's Booru-Cogs.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         if server.id not in self.filters:
             self.filters[server.id] = self.filters["default"]
@@ -89,9 +88,9 @@ class ImRoll:
                     fileIO("data/rolls/filters.json", "save", self.filters)
                     self.filters = fileIO("data/rolls/filters.json", "load")
                 else:
-                    await self.bot.say("{} filters not found!".format(server_name.title()))
+                    await self.bot.say(self.get_random_string("filter_found").format(server_name.title()))
             else:
-                await self.bot.say("{} module not found!".format(server_name.title()))
+                await self.bot.say(self.get_random_string("filter_no_module").format(server_name.title()))
 
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
@@ -780,6 +779,8 @@ def update_strings():
         "filter_default": ["Server is already using the default {} filter list."],
         "filter_list": ["{} filter list: ```\n{}```"],
         "filter_no_custom": ["No custom filters found!"],
+        "filter_found": ["{} filters not found!"],
+        "filter_no_module": ["{} module not found!"],
         "sth_disabled": ["{} - disabled!"],
         "sth_enabled": ["{} - enabled!"],
         "GTFO": ["You are banned!"],
