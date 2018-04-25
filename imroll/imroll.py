@@ -53,15 +53,23 @@ class ImRoll:
     # region Filters
     @commands.group(pass_context=True)
     async def rollfilter(self, ctx):
-        """Manages filters for image providers
-           Warning: Can (could and will ^^) be used to allow NSFW images
+        """
+        Manages filters for image providers
+        Warning: Can (could and will ^^) be used to allow NSFW images
 
-           Filters automatically apply tags to each search"""
+        Filters automatically apply tags to each search
+        """
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
             
     @rollfilter.command(name="import", pass_context=True)
     async def _import_rollfilter(self, ctx):
+        """
+        Use this function to copy filter settings from existing installation of Alzarath's Booru-Cogs.
+        """
+        # TODO - implement checking if file exists!
+        # TODO - refactor to use strings repository
+        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id not in self.filters:
             self.filters[server.id] = self.filters["default"]
@@ -96,6 +104,11 @@ class ImRoll:
 
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
+        """
+        Shows list of filters for each image provider.
+        """
+        # TODO - refactor to use strings repository
+        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id in self.filters:
             list_tags = '\n'.join(sorted(self.filters[server.id]["loli"]))
@@ -165,11 +178,13 @@ class ImRoll:
     # region Settings
     @commands.command(no_pm=True)
     async def maxfilters(self, mod, maxfilters):
-        """Sets the global tag limit for the filter list
+        """
+        Sets the global tag limit for the filter list
 
-           Gives an error when a user tries to add a filter while the server's filter list
-           contains a certain amount of tags
-           """
+        Gives an error when a user tries to add a filter while the server's filter list
+        contains a certain amount of tags
+        """
+        # TODO - rework this solution
         self.settings["maxfilters"][mod] = maxfilters
         fileIO("data/rolls/settings.json", "save", self.settings)
         await self.bot.say("Maximum filters allowed per server for {} set to '{}'.".format(mod, maxfilters))
@@ -177,12 +192,20 @@ class ImRoll:
 
     # region Counter
     async def check_time(self, date_string, now):
+        """
+        Returns timedelta between date_string and now.
+        """
         long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
         event_time = datetime.datetime.strptime(date_string, "%d.%m.%Y %H:%M")
         current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
         return current_time - event_time
 
     async def check_ban(self, user, server_id):
+        """
+        Checks if user is banned or not.
+
+        Returns True for active ban, and False for clean users.
+        """
         now = datetime.datetime.now()
         if user not in self.bans[server_id]["ban"]:
             return False
@@ -196,6 +219,9 @@ class ImRoll:
                 return True
 
     async def log_roll(self, server_id):
+        """
+        Checks if day passed since last change of log roll, and performs it if necessary.
+        """
         now = datetime.datetime.now()
         time_delta = await self.check_time(self.counter[server_id]["roll_date"], now)
         if time_delta >= datetime.timedelta(days=1):
@@ -206,7 +232,12 @@ class ImRoll:
             fileIO("data/rolls/counter.json", "save", self.counter)
 
     @commands.command(pass_context=True, no_pm=True)
-    async def fapcounter(self, ctx, *text):
+    async def roll_counter(self, ctx, *text):
+        """
+        Displays statistics of imroll command usage (or it's abuse).
+        """
+        # TODO - refactor to use strings repository
+        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id not in self.counter:
             await self.bot.say("No statistics for this server. Zone-tan is not pleased ;(")
@@ -244,14 +275,18 @@ class ImRoll:
             await self.bot.say(
                 "Today: ```\n👑{}```".format(list_tags))
 
-    async def add_fap(self, ctx):
+    async def add_roll(self, ctx):
+        """
+        Adds performed roll to log.
+        """
+        # TODO - refactor to use strings repository
+        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id not in self.bans:
             self.bans[server.id] = self.bans["default"]
             fileIO("data/rolls/bans.json", "save", self.bans)
         user = ctx.message.author.name
         now = datetime.datetime.now()
-        long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
         if server.id not in self.counter:
             date = "{}.{}.{}".format(now.day, now.month, now.year)
             log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
@@ -286,6 +321,10 @@ class ImRoll:
     # region Group rolls
     @commands.command(pass_context=True, no_pm=True)
     async def imroll(self, ctx, *text):
+        """
+        Generates set of images in ordered manner.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -294,7 +333,7 @@ class ImRoll:
             self.settings = fileIO("data/rolls/settings.json", "load")
             self.active = fileIO("data/rolls/active.json", "load")
             self.counter = fileIO("data/rolls/counter.json", "load")
-            await self.add_fap(ctx)
+            await self.add_roll(ctx)
 
             lock = asyncio.Lock()
             await asyncio.gather(
@@ -308,6 +347,10 @@ class ImRoll:
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
+        """
+        Generates set of images in unordered manner.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -316,7 +359,7 @@ class ImRoll:
             self.settings = fileIO("data/rolls/settings.json", "load")
             self.active = fileIO("data/rolls/active.json", "load")
             self.counter = fileIO("data/rolls/counter.json", "load")
-            await self.add_fap(ctx)
+            await self.add_roll(ctx)
 
             await asyncio.gather(
                 self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
@@ -335,6 +378,10 @@ class ImRoll:
     # region Single rolls
     @commands.command(pass_context=True, no_pm=True)
     async def lolirs(self, ctx, *text):
+        """
+        Generates image form lolibooru.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -348,6 +395,10 @@ class ImRoll:
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
+        """
+        Generates image form danbooru.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -361,6 +412,10 @@ class ImRoll:
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
+        """
+        Generates image form gelbooru.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -374,6 +429,10 @@ class ImRoll:
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
+        """
+        Generates image form konachan.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -389,43 +448,66 @@ class ImRoll:
     # region Configrolls
     @commands.group(pass_context=True)
     async def configrolls(self, ctx):
+        """
+        Displays active configuration of enabled servers.
+        """
         if ctx.invoked_subcommand is None:
             self.active = fileIO("data/rolls/active.json", "load")
             await self.bot.say("```{}```".format(self.active["current"]))
 
-    async def toggle_switch(self, mode):
+    async def toggle_switch(self, server):
+        """
+        Switches state of server.
+        """
+        # TODO - refactor to use strings repository
         self.active = fileIO("data/rolls/active.json", "load")
-        if self.active["current"][mode] == "true":
-            self.active["current"][mode] = "false"
-            await self.bot.say(mode + " - disabled!")
+        if self.active["current"][server] == "true":
+            self.active["current"][server] = "false"
+            await self.bot.say(server + " - disabled!")
         else:
-            self.active["current"][mode] = "true"
-            await self.bot.say(mode + " - enabled!")
+            self.active["current"][server] = "true"
+            await self.bot.say(server + " - enabled!")
         fileIO("data/rolls/active.json", "save", self.active)
 
     @configrolls.command(name="loli", pass_context=True, no_pm=True)
     @checks.is_owner()
     async def _loli_switch(self, ctx, *text):
+        """
+        Toggles availability of lolibooru.
+        """
         await self.toggle_switch("loli")
 
     @configrolls.command(name="kona", pass_context=True, no_pm=True)
     @checks.is_owner()
     async def _kona_switch(self, ctx, *text):
+        """
+        Toggles availability of konachan.
+        """
         await self.toggle_switch("kona")
 
     @configrolls.command(name="dan", pass_context=True, no_pm=True)
     @checks.is_owner()
     async def _dan_switch(self, ctx, *text):
+        """
+        Toggles availability of danbooru.
+        """
         await self.toggle_switch("dan")
 
     @configrolls.command(name="gel", pass_context=True, no_pm=True)
     @checks.is_owner()
     async def _gel_switch(self, ctx, *text):
+        """
+        Toggles availability of gelbooru.
+        """
         await self.toggle_switch("gel")
 
     @commands.command(no_pm=True)
     @checks.is_owner()
     async def killswitch(self):
+        """
+        Disables all image generating functions.
+        """
+        # TODO - rework this solution
         if self.active["killed"] != "True":
             self.active["backup"] = self.active["current"]
             self.active["current"] = {"loli": "false", "kona": "false", "gel": "false", "dan": "false"}
@@ -436,6 +518,9 @@ class ImRoll:
     @commands.command(no_pm=True)
     @checks.is_owner()
     async def dekillswitch(self):
+        """
+        Reenables status of image generating functions.
+        """
         if self.active["killed"] == "True":
             self.active["current"] = self.active["backup"]
             self.active["killed"] = "False"
@@ -444,26 +529,34 @@ class ImRoll:
     # endregion
 
     # region Support functions
-    async def filter_add(self, ctx, mod, tag):
+    async def filter_add(self, ctx, server_name, tag):
+        """
+        Adds tag to list of active tags of server.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         if server.id not in self.filters:
             self.filters[server.id] = self.filters["default"]
             fileIO("data/rolls/filters.json", "save", self.filters)
             self.filters = fileIO("data/rolls/filters.json", "load")
-        if len(self.filters[server.id][mod]) < int(self.settings["maxfilters"][mod]):
-            if tag not in self.filters[server.id][mod]:
-                self.filters[server.id][mod].append(tag)
+        if len(self.filters[server.id][server_name]) < int(self.settings["maxfilters"][server_name]):
+            if tag not in self.filters[server.id][server_name]:
+                self.filters[server.id][server_name].append(tag)
                 fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say("Filter '{}' added to the server's {} filter list.".format(tag, mod))
+                await self.bot.say("Filter '{}' added to the server's {} filter list.".format(tag, server_name))
             else:
                 await self.bot.say(
-                    "Filter '{}' is already in the server's {} filter list.".format(tag, mod))
+                    "Filter '{}' is already in the server's {} filter list.".format(tag, server_name))
         else:
             await self.bot.say("This server has exceeded the maximum filters ({}/{})."
                                " https://www.youtube.com/watch?v=1MelZ7xaacs".format(
-                                len(self.filters[server.id][mod]), self.settings["maxfilters"][mod]))
+                                len(self.filters[server.id][server_name]), self.settings["maxfilters"][server_name]))
 
     async def filter_del(self, ctx, mod, tag):
+        """
+        Deletes tag from list of selected server.
+        """
+        # TODO - refactor to use strings repository
         server = ctx.message.server
         if len(tag) > 0:
             if server.id not in self.filters:
@@ -484,9 +577,12 @@ class ImRoll:
             else:
                 await self.bot.say("Server is already using the default {} filter list.".format(mod))
 
-    async def get_details(self, page, ident, mode):
+    async def get_details(self, page, iterator, mode):
+        """
+        Generates embed message for image.
+        """
         # Fetches the image ID
-        image_id = page[ident].get('id')
+        image_id = page[iterator].get('id')
 
         # Sets the embed title
         embed_title = self.phrases[mode]["title"].format(image_id)
@@ -495,7 +591,7 @@ class ImRoll:
         embed_link = self.phrases[mode]["embed"].format(image_id)
 
         # Check for the rating and set an appropriate color
-        rating = page[ident].get('rating')
+        rating = page[iterator].get('rating')
         if rating == "s":
             rating_color = "00FF00"
             # rating_word = "safe"
@@ -513,6 +609,11 @@ class ImRoll:
                              colour=discord.Colour(value=int(rating_color, 16)))
 
     async def image_get(self, ctx, server, channel, mode, lock, sync=True):
+        """
+        Fetches image from specified server, and passes result messages to specified server.
+        """
+        # TODO - refactor to use strings repository
+        # TODO - rework deprecated aiohttp.get() function
         search_phrase = self.phrases[mode]["call"]
         tag_list = ''
 
@@ -632,16 +733,25 @@ class ImRoll:
 
 
 async def dummy():
+    """
+    Permanently bugless function - does nothing.
+    """
     pass
 
 
 def check_folder():
+    """
+    Checks if data directory exists and creates it if necessary.
+    """
     if not os.path.exists("data/rolls"):
         print("Creating data/rolls folder...")
         os.makedirs("data/rolls")
 
 
 def check_files():
+    """
+    Creates data files.
+    """
     now = datetime.datetime.now()
     date = "{}.{}.{}".format(now.day, now.month, now.year)
     filters = {"default": {"loli": ["rating:safe"], "gel": ["rating:safe"], "dan": ["rating:safe"],
@@ -679,6 +789,9 @@ def check_files():
 
 
 def setup(bot):
+    """
+    Sets up cog to work properly.
+    """
     check_folder()
     check_files()
     bot.add_cog(ImRoll(bot))
