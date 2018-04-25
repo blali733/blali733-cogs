@@ -80,9 +80,9 @@ class ImRoll:
                     fileIO("data/rolls/filters.json", "save", self.filters)
                     self.filters = fileIO("data/rolls/filters.json", "load")
                 else:
-                    await self.bot.say("{} filters not found!".format(server_name))
+                    await self.bot.say("{} filters not found!".format(server_name.title()))
             else:
-                await self.bot.say("{} module not found!".format(server_name))
+                await self.bot.say("{} module not found!".format(server_name.title()))
 
     @rollfilter.command(name="show", pass_context=True)
     async def _filters_show(self, ctx):
@@ -90,17 +90,12 @@ class ImRoll:
         Shows list of filters for each image provider.
         """
         # TODO - refactor to use strings repository
-        # TODO - remove code repetitions
         server = ctx.message.server
         if server.id in self.filters:
-            list_tags = '\n'.join(sorted(self.filters[server.id]["loli"]))
-            await self.bot.say("Loli filter list: ```\n{}```".format(list_tags))
-            list_tags = '\n'.join(sorted(self.filters[server.id]["kona"]))
-            await self.bot.say("Kona filter list: ```\n{}```".format(list_tags))
-            list_tags = '\n'.join(sorted(self.filters[server.id]["gel"]))
-            await self.bot.say("Gel filter list: ```\n{}```".format(list_tags))
-            list_tags = '\n'.join(sorted(self.filters[server.id]["dan"]))
-            await self.bot.say("Dan filter list: ```\n{}```".format(list_tags))
+            order = ["loli", "dan", "kona", "gel"]
+            for server_name in order:
+                list_tags = '\n'.join(sorted(self.filters[server.id][server_name]))
+                await self.bot.say("{} filter list: ```\n{}```".format(server_name.title(), list_tags))
         else:
             await self.bot.say("No custom filters found!")
 
