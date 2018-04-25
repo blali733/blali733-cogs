@@ -289,22 +289,26 @@ class ImRoll:
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
-        if not await self.check_ban(user, server.id):
-            self.filters = fileIO("data/rolls/filters.json", "load")
-            self.settings = fileIO("data/rolls/settings.json", "load")
-            self.active = fileIO("data/rolls/active.json", "load")
-            self.counter = fileIO("data/rolls/counter.json", "load")
-            await self.add_roll(ctx)
+        if self.active["killed"] != "True":
+            if not await self.check_ban(user, server.id):
+                self.filters = fileIO("data/rolls/filters.json", "load")
+                self.settings = fileIO("data/rolls/settings.json", "load")
+                self.active = fileIO("data/rolls/active.json", "load")
+                self.counter = fileIO("data/rolls/counter.json", "load")
+                await self.add_roll(ctx)
 
-            lock = asyncio.Lock()
-            await asyncio.gather(
-                self.image_get(ctx, server, channel, "loli", lock) if self.active["current"]["loli"] == "true" else dummy(),
-                self.image_get(ctx, server, channel, "dan", lock) if self.active["current"]["dan"] == "true" else dummy(),
-                self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
-                self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
-            )
+                lock = asyncio.Lock()
+                await asyncio.gather(
+                    self.image_get(ctx, server, channel, "loli", lock) if self.active["current"]["loli"] == "true" else dummy(),
+                    self.image_get(ctx, server, channel, "dan", lock) if self.active["current"]["dan"] == "true" else dummy(),
+                    self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
+                    self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
+                )
+            else:
+                await self.bot.say("I am NOT talking with you pervert!")
         else:
-            await self.bot.say("I am NOT talking with you pervert!")
+            await self.bot.say("I am out of order, sorry ;(")
+
 
     @commands.command(pass_context=True, no_pm=True)
     async def imrollf(self, ctx, *text):
@@ -315,25 +319,28 @@ class ImRoll:
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
-        if not await self.check_ban(user, server.id):
-            self.filters = fileIO("data/rolls/filters.json", "load")
-            self.settings = fileIO("data/rolls/settings.json", "load")
-            self.active = fileIO("data/rolls/active.json", "load")
-            self.counter = fileIO("data/rolls/counter.json", "load")
-            await self.add_roll(ctx)
+        if self.active["killed"] != "True":
+            if not await self.check_ban(user, server.id):
+                self.filters = fileIO("data/rolls/filters.json", "load")
+                self.settings = fileIO("data/rolls/settings.json", "load")
+                self.active = fileIO("data/rolls/active.json", "load")
+                self.counter = fileIO("data/rolls/counter.json", "load")
+                await self.add_roll(ctx)
 
-            await asyncio.gather(
-                self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
-                                                                                  "loli"] == "true" else dummy(),
-                self.image_get(ctx, server, channel, "dan", False, False) if self.active["current"][
-                                                                                 "dan"] == "true" else dummy(),
-                self.image_get(ctx, server, channel, "gel", False, False) if self.active["current"][
-                                                                                 "gel"] == "true" else dummy(),
-                self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
-                                                                                  "kona"] == "true" else dummy(),
-            )
+                await asyncio.gather(
+                    self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
+                                                                                      "loli"] == "true" else dummy(),
+                    self.image_get(ctx, server, channel, "dan", False, False) if self.active["current"][
+                                                                                     "dan"] == "true" else dummy(),
+                    self.image_get(ctx, server, channel, "gel", False, False) if self.active["current"][
+                                                                                     "gel"] == "true" else dummy(),
+                    self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
+                                                                                      "kona"] == "true" else dummy(),
+                )
+            else:
+                await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
         else:
-            await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
+            await self.bot.say("I am out of order, sorry ;(")
     # endregion
 
     # region Single rolls
@@ -346,13 +353,16 @@ class ImRoll:
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
-        if not await self.check_ban(user, server.id):
-            self.filters = fileIO("data/rolls/filters.json", "load")
-            self.settings = fileIO("data/rolls/settings.json", "load")
+        if self.active["killed"] != "True":
+            if not await self.check_ban(user, server.id):
+                self.filters = fileIO("data/rolls/filters.json", "load")
+                self.settings = fileIO("data/rolls/settings.json", "load")
 
-            await self.image_get(ctx, server, channel, "loli", False, False)
+                await self.image_get(ctx, server, channel, "loli", False, False)
+            else:
+                await self.bot.say("I am calling the police!")
         else:
-            await self.bot.say("I am calling the police!")
+            await self.bot.say("I am out of order, sorry ;(")
 
     @commands.command(pass_context=True, no_pm=True)
     async def danrs(self, ctx, *text):
@@ -363,13 +373,16 @@ class ImRoll:
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
-        if not await self.check_ban(user, server.id):
-            self.filters = fileIO("data/rolls/filters.json", "load")
-            self.settings = fileIO("data/rolls/settings.json", "load")
+        if self.active["killed"] != "True":
+            if not await self.check_ban(user, server.id):
+                self.filters = fileIO("data/rolls/filters.json", "load")
+                self.settings = fileIO("data/rolls/settings.json", "load")
 
-            await self.image_get(ctx, server, channel, "dan", False, False)
+                await self.image_get(ctx, server, channel, "dan", False, False)
+            else:
+                await self.bot.say("Be gone!")
         else:
-            await self.bot.say("Be gone!")
+            await self.bot.say("I am out of order, sorry ;(")
 
     @commands.command(pass_context=True, no_pm=True)
     async def gelrs(self, ctx, *text):
@@ -380,13 +393,16 @@ class ImRoll:
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
-        if not await self.check_ban(user, server.id):
-            self.filters = fileIO("data/rolls/filters.json", "load")
-            self.settings = fileIO("data/rolls/settings.json", "load")
+        if self.active["killed"] != "True":
+            if not await self.check_ban(user, server.id):
+                self.filters = fileIO("data/rolls/filters.json", "load")
+                self.settings = fileIO("data/rolls/settings.json", "load")
 
-            await self.image_get(ctx, server, channel, "gel", False, False)
+                await self.image_get(ctx, server, channel, "gel", False, False)
+            else:
+                await self.bot.say("Addict!")
         else:
-            await self.bot.say("Addict!")
+            await self.bot.say("I am out of order, sorry ;(")
 
     @commands.command(pass_context=True, no_pm=True)
     async def konars(self, ctx, *text):
@@ -397,13 +413,16 @@ class ImRoll:
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
-        if not await self.check_ban(user, server.id):
-            self.filters = fileIO("data/rolls/filters.json", "load")
-            self.settings = fileIO("data/rolls/settings.json", "load")
+        if self.active["killed"] != "True":
+            if not await self.check_ban(user, server.id):
+                self.filters = fileIO("data/rolls/filters.json", "load")
+                self.settings = fileIO("data/rolls/settings.json", "load")
 
-            await self.image_get(ctx, server, channel, "kona", False, False)
+                await self.image_get(ctx, server, channel, "kona", False, False)
+            else:
+                await self.bot.say("Go away you baka!")
         else:
-            await self.bot.say("Go away you baka!")
+            await self.bot.say("I am out of order, sorry ;(")
     # endregion
 
     # region Configrolls
@@ -468,10 +487,7 @@ class ImRoll:
         """
         Disables all image generating functions.
         """
-        # TODO - rework this solution
         if self.active["killed"] != "True":
-            self.active["backup"] = self.active["current"]
-            self.active["current"] = {"loli": "false", "kona": "false", "gel": "false", "dan": "false"}
             self.active["killed"] = "True"
             fileIO("data/rolls/active.json", "save", self.active)
             await self.bot.say("Disabled")
@@ -483,7 +499,6 @@ class ImRoll:
         Reenables status of image generating functions.
         """
         if self.active["killed"] == "True":
-            self.active["current"] = self.active["backup"]
             self.active["killed"] = "False"
             fileIO("data/rolls/active.json", "save", self.active)
             await self.bot.say("Enabled")
@@ -719,7 +734,6 @@ def check_files():
                            "kona": ["rating:safe"]}}
     settings = {"maxfilters": {"loli": "50", "gel": "10", "dan": "50", "kona": "50"}}
     activity = {"current": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
-                "backup": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
                 "killed": "False"}
     counter = {"default": {"date": date}}
     banned = {"default": {"ban": {}, "whitelist": [], "rules": {"daily": "50", "VACation": "7"}}}
