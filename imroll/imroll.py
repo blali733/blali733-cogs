@@ -98,15 +98,14 @@ class ImRoll:
         """
         Shows list of filters for each image provider.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         if server.id in self.filters:
             order = ["loli", "dan", "kona", "gel"]
             for server_name in order:
                 list_tags = '\n'.join(sorted(self.filters[server.id][server_name]))
-                await self.bot.say("{} filter list: ```\n{}```".format(server_name.title(), list_tags))
+                await self.bot.say(self.get_random_string("filter_list").format(server_name.title(), list_tags))
         else:
-            await self.bot.say("No custom filters found!")
+            await self.bot.say(self.get_random_string("filter_no_custom"))
 
     @rollfilter.command(name="loli", pass_context=True)
     async def _loli_rollfilter(self, ctx, operation, tag):
@@ -779,6 +778,8 @@ def update_strings():
         "filter_not_existing": ["Filter '{}' does not exist in the server's {} filter list."],
         "filter_revert": ["Reverted the server to the default {} filter list."],
         "filter_default": ["Server is already using the default {} filter list."],
+        "filter_list": ["{} filter list: ```\n{}```"],
+        "filter_no_custom": ["No custom filters found!"],
         "sth_disabled": ["{} - disabled!"],
         "sth_enabled": ["{} - enabled!"],
         "GTFO": ["You are banned!"],
