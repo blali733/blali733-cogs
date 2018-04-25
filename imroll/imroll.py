@@ -294,7 +294,6 @@ class ImRoll:
         """
         Generates set of images in ordered manner.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -314,7 +313,7 @@ class ImRoll:
                     self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
                 )
             else:
-                await self.bot.say("I am NOT talking with you pervert!")
+                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
         else:
             await self.bot.say(self.get_random_string("disabled_info"))
 
@@ -323,7 +322,6 @@ class ImRoll:
         """
         Generates set of images in unordered manner.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -346,7 +344,7 @@ class ImRoll:
                                                                                       "kona"] == "true" else dummy(),
                 )
             else:
-                await self.bot.say("Mom, Mom, {} is fapping again!".format(user))
+                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
         else:
             await self.bot.say(self.get_random_string("disabled_info"))
     # endregion
@@ -357,7 +355,6 @@ class ImRoll:
         """
         Generates image form lolibooru.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -368,7 +365,7 @@ class ImRoll:
 
                 await self.image_get(ctx, server, channel, "loli", False, False)
             else:
-                await self.bot.say("I am calling the police!")
+                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
         else:
             await self.bot.say(self.get_random_string("disabled_info"))
 
@@ -377,7 +374,6 @@ class ImRoll:
         """
         Generates image form danbooru.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -388,7 +384,7 @@ class ImRoll:
 
                 await self.image_get(ctx, server, channel, "dan", False, False)
             else:
-                await self.bot.say("Be gone!")
+                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
         else:
             await self.bot.say(self.get_random_string("disabled_info"))
 
@@ -397,7 +393,6 @@ class ImRoll:
         """
         Generates image form gelbooru.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -408,7 +403,7 @@ class ImRoll:
 
                 await self.image_get(ctx, server, channel, "gel", False, False)
             else:
-                await self.bot.say("Addict!")
+                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
         else:
             await self.bot.say(self.get_random_string("disabled_info"))
 
@@ -417,7 +412,6 @@ class ImRoll:
         """
         Generates image form konachan.
         """
-        # TODO - refactor to use strings repository
         server = ctx.message.server
         channel = ctx.message.channel
         user = ctx.message.author.name
@@ -428,7 +422,7 @@ class ImRoll:
 
                 await self.image_get(ctx, server, channel, "kona", False, False)
             else:
-                await self.bot.say("Go away you baka!")
+                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
         else:
             await self.bot.say(self.get_random_string("disabled_info"))
     # endregion
@@ -790,7 +784,8 @@ def update_strings():
         "filter_revert": ["Reverted the server to the default {} filter list."],
         "filter_default": ["Server is already using the default {} filter list."],
         "sth_disabled": ["{} - disabled!"],
-        "sth_enabled": ["{} - enabled!"]
+        "sth_enabled": ["{} - enabled!"],
+        "GTFO": ["You are banned!"],
     }
 
     if not fileIO("data/rolls/strings.json", "check"):
