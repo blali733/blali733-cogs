@@ -279,7 +279,7 @@ class ImRoll:
                     self.bans[server.id]["ban"][user] = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
                     fileIO("data/rolls/bans.json", "save", self.bans)
                 else:
-                    await self.bot.say(self.get_random_string("ban_eveded"))
+                    await self.bot.say(self.get_random_string("ban_evaded"))
             fileIO("data/rolls/counter.json", "save", self.counter)
     # endregion
 
