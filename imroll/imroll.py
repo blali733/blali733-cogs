@@ -1,29 +1,28 @@
 import random
-from urllib import parse
-
-import aiohttp
-import discord
-import sys
-from discord.ext import commands
-
-from .utils import checks
-from .utils.dataIO import fileIO
-import os
-import asyncio
+from redbot.core import commands
+from redbot.core import Config
 from __main__ import send_cmd_help
-import datetime
-import operator
+from .defaultProvider import DefaultProvider
 
 
-class ImRoll:
-    def __init__(self, bot):
-        self.bot = bot
-        self.filters = fileIO("data/rolls/filters.json", "load")
-        self.settings = fileIO("data/rolls/settings.json", "load")
-        self.active = fileIO("data/rolls/active.json", "load")
-        self.counter = fileIO("data/rolls/counter.json", "load")
-        self.bans = fileIO("data/rolls/bans.json", "load")
-        self.strings = fileIO("data/rolls/strings.json", "load")
+class ImRoll(commands.Cog):
+
+    def __init__(self):
+        self.conf = Config.get_conf(self, identifier=666123666)
+
+        provider = DefaultProvider()
+
+        default_guild = {
+            'filters': provider.get_filters(),
+            'settings': provider.get_settings(),
+            'active': provider.get_active(),
+            'counter': provider.get_counter(),
+            'bans': provider.get_bans(),
+            'strings': provider.get_strings(),
+        }
+
+        self.conf.register_guild(**default_guild)
+
         self.phrases = {
             "loli": {"random": "+order%3Arandom",
                      "call": "https://lolibooru.moe/post/index.json?limit=1&tags=",
@@ -53,14 +52,14 @@ class ImRoll:
 
     # region Strings
     def get_random_string(self, string_type):
-        return self.strings[string_type][random.randint(0, len(self.strings[string_type])-1)]
+        return await self.conf.get_raw('strings', string_type, random.randint(0, len(await self.conf.get_raw('strings', string_type))-1))
 
     def get_string(self, string_type, iterator):
-        return self.strings[string_type][iterator]
+        return await self.conf.get_raw('strings', string_type, iterator)
     # endregion
 
     # region Filters
-    @commands.group(pass_context=True)
+    @commands.group()
     async def rollfilter(self, ctx):
         """
         Manages filters for image providers
@@ -70,43 +69,22 @@ class ImRoll:
         """
         if ctx.invoked_subcommand is None:
             await send_cmd_help(ctx)
-            
-    @rollfilter.command(name="import", pass_context=True)
-    async def _import_rollfilter(self, ctx):
-        """
-        Use this function to copy filter settings from existing installation of Alzarath's Booru-Cogs.
-        """
-        server = ctx.message.server
-        if server.id not in self.filters:
-            self.filters[server.id] = self.filters["default"]
-        order = ["loli", "dan", "kona", "gel"]
-        for server_name in order:
-            if fileIO("data/{}/filters.json".format(server_name), "check"):
-                vals = fileIO("data/{}/filters.json".format(server_name), "load")
-                if server.id in vals:
-                    self.filters[server.id][server_name] = vals[server.id]
-                    fileIO("data/rolls/filters.json", "save", self.filters)
-                    self.filters = fileIO("data/rolls/filters.json", "load")
-                else:
-                    await self.bot.say(self.get_random_string("filter_found").format(server_name.title()))
-            else:
-                await self.bot.say(self.get_random_string("filter_no_module").format(server_name.title()))
 
-    @rollfilter.command(name="show", pass_context=True)
+    @rollfilter.command(name="show")
     async def _filters_show(self, ctx):
         """
         Shows list of filters for each image provider.
         """
-        server = ctx.message.server
-        if server.id in self.filters:
+        guild = ctx.message.guild
+        if guild.id in self.filters:
             order = ["loli", "dan", "kona", "gel"]
-            for server_name in order:
-                list_tags = '\n'.join(sorted(self.filters[server.id][server_name]))
-                await self.bot.say(self.get_random_string("filter_list").format(server_name.title(), list_tags))
+            for mod in order:
+                list_tags = '\n'.join(sorted(await self.conf.get_raw('filters', guild.id, mod))
+                await self.ctx.send(self.get_random_string("filter_list").format(mod.title(), list_tags))
         else:
-            await self.bot.say(self.get_random_string("filter_no_custom"))
+            await self.ctx.send(self.get_random_string("filter_no_custom"))
 
-    @rollfilter.command(name="loli", pass_context=True)
+    @rollfilter.command(name="loli")
     async def _loli_rollfilter(self, ctx, operation, tag):
         """Manages filters for Lolibooru
            Warning: Can (could and will ^^) be used to allow NSFW images
@@ -117,9 +95,9 @@ class ImRoll:
         elif "del" in operation:
             await self.filter_del(ctx, "loli", tag)
         elif "show" in operation:
-            await self.bot.say(self.filters[ctx.message.server.id]["loli"])
+            await self.ctx.send(await self.conf.get_raw('filters', ctx.message.guild.id, 'loli'))
 
-    @rollfilter.command(name="dan", pass_context=True)
+    @rollfilter.command(name="dan")
     async def _dan_rollfilter(self, ctx, operation, tag):
         """Manages filters for Danbooru
            Warning: Can (could and will ^^) be used to allow NSFW images
@@ -130,9 +108,9 @@ class ImRoll:
         elif "del" in operation:
             await self.filter_del(ctx, "dan", tag)
         elif "show" in operation:
-            await self.bot.say(self.filters[ctx.message.server.id]["dan"])
+            await self.ctx.send(await self.conf.get_raw('filters', ctx.message.guild.id, 'dan'))
 
-    @rollfilter.command(name="gel", pass_context=True)
+    @rollfilter.command(name="gel")
     async def _gel_rollfilter(self, ctx, operation, tag):
         """Manages filters for Gelbooru
            Warning: Can (could and will ^^) be used to allow NSFW images
@@ -143,9 +121,9 @@ class ImRoll:
         elif "del" in operation:
             await self.filter_del(ctx, "gel", tag)
         elif "show" in operation:
-            await self.bot.say(self.filters[ctx.message.server.id]["gel"])
+            await self.ctx.send(await self.conf.get_raw('filters', ctx.message.guild.id, 'gel'))
 
-    @rollfilter.command(name="kona", pass_context=True)
+    @rollfilter.command(name="kona")
     async def _kona_rollfilter(self, ctx, operation, tag):
         """Manages filters for Konachan
            Warning: Can (could and will ^^) be used to allow NSFW images
@@ -156,8 +134,49 @@ class ImRoll:
         elif "del" in operation:
             await self.filter_del(ctx, "kona", tag)
         elif "show" in operation:
-            await self.bot.say(self.filters[ctx.message.server.id]["kona"])
+            await self.ctx.send(await self.conf.get_raw('filters', ctx.message.guild.id, 'kona'))
     # endregion
+
+    # region Support functions
+    async def filter_add(self, ctx, mod, tag):
+        """
+        Adds tag to list of active tags of server.
+        """
+        guild=ctx.message.guild
+        if guild.id not in await self.conf.get_raw('filters'):
+            await self.conf.set_raw('filters', guild.id, value=await self.conf.get_raw('filters', 'default')
+        if len(await self.conf.get_raw('filters', guild.id, mod)) < int(await self.conf.get_raw('settings', 'maxfilters', mod)):
+            if tag not in await self.conf.get_raw('filters', guild.id, mod):
+                await self.conf.set_raw('filters', guild.id, mod, value=await self.conf.get_raw(
+                    'filters', guild.id, mod).append(tag))
+                await self.ctx.send(self.get_random_string("filter_add").format(tag, mod))
+            else:
+                await self.ctx.send(self.get_random_string("filter_exists").format(tag, mod))
+        else:
+            await self.ctx.send(self.get_random_string("filter_max").format(
+                                len(await self.conf.get_raw('filters', guild.id, mod)), await self.conf.get_raw('settings', 'maxfilters', mod))
+
+    async def filter_del(self, ctx, mod, tag):
+        """
+        Deletes tag from list of selected server. Reverts to default when no tag is given.
+        """
+        guild=ctx.message.guild
+        if len(tag) > 0:
+            if guild.id not in await self.conf.get_raw('filters'):
+                 await self.conf.set_raw('filters', guild.id, value=await self.conf.get_raw('filters', 'default')
+            if tag in await self.conf.get_raw('filters', guild.id, mod):
+                await self.conf.set_raw('filters', guild.id, mod, value=await self.conf.get_raw(
+                    'filters', guild.id, mod).remove(tag))
+                await self.ctx.send(self.get_random_string("filter_del").format(tag, mod))
+            else:
+                await self.ctx.send(self.get_random_string("filter_not_existing").format(tag, mod))
+        else:
+            if guild.id in await self.conf.get_raw('filters'):
+                await self.conf.set_raw('filters', guild.id, value=await self.conf.get_raw(
+                    'filters', guild.id).remove(mod))
+                await self.ctx.send(self.get_random_string("filter_revert").format(mod))
+            else:
+                await self.ctx.send(self.get_random_string("filter_default").format(mod))
 
     # region Settings
     @commands.command(no_pm=True)
@@ -169,9 +188,8 @@ class ImRoll:
         contains a certain amount of tags
         """
         # TODO - rework this solution
-        self.settings["maxfilters"][mod] = maxfilters
-        fileIO("data/rolls/settings.json", "save", self.settings)
-        await self.bot.say("Maximum filters allowed per server for {} set to '{}'.".format(mod, maxfilters))
+         await self.conf.set_raw('settings', 'maxfilters', mod, value=maxfilters)
+        await self.ctx.send("Maximum filters allowed per server for {} set to '{}'.".format(mod, maxfilters))
     # endregion
 
     # region Counter
@@ -179,635 +197,106 @@ class ImRoll:
         """
         Returns timedelta between date_string and now.
         """
-        long_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, now.hour, now.minute)
-        event_time = datetime.datetime.strptime(date_string, "%d.%m.%Y %H:%M")
-        current_time = datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
+        long_date="{}.{}.{} {}:{}".format(
+            now.day, now.month, now.year, now.hour, now.minute)
+        event_time=datetime.datetime.strptime(date_string, "%d.%m.%Y %H:%M")
+        current_time=datetime.datetime.strptime(long_date, "%d.%m.%Y %H:%M")
         return current_time - event_time
 
-    def check_ban(self, user, server_id):
+    def check_ban(self, user, guild_id):
         """
         Checks if user is banned or not.
 
         Returns True for active ban, and False for clean users.
         """
-        now = datetime.datetime.now()
-        if user not in self.bans[server_id]["ban"]:
+        now=datetime.datetime.now()
+        if user not in await self.conf.get_raw('bans', guild_id, 'ban'):
             return False
         else:
-            time_delta = self.check_time(self.bans[server_id]["ban"][user], now)
-            if time_delta >= datetime.timedelta(days=int(self.bans[server_id]["rules"]["VACation"])):
-                del self.bans[server_id]["ban"][user]
-                fileIO("data/rolls/bans.json", "save", self.bans)
+            time_delta=self.check_time(await self.conf.get_raw(
+                'bans', guild_id, 'ban', user), now)
+            if time_delta >= datetime.timedelta(days=int(await self.conf.get_raw('bans', guild_id, 'rules', 'VACation'))):
+                await self.conf.set_raw('bans', guild_id, 'ban', value=await self.conf.get_raw(
+                    'bans', guild_id, 'ban').remove(user))
                 return False
             else:
                 return True
 
-    async def log_roll(self, server_id):
+    async def log_roll(self, guild_id):
         """
         Checks if day passed since last change of log roll, and performs it if necessary.
         """
-        now = datetime.datetime.now()
-        time_delta = self.check_time(self.counter[server_id]["roll_date"], now)
+        now=datetime.datetime.now()
+        time_delta=self.check_time(await self.conf.get_raw('counter', guild_id, 'roll_date', now))
         if time_delta >= datetime.timedelta(days=1):
-            self.counter[server_id]["yesterday"] = self.counter[server_id]["today"]
-            self.counter[server_id]["today"] = {}
-            log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
-            self.counter[server_id]["roll_date"] = log_roll_date
-            fileIO("data/rolls/counter.json", "save", self.counter)
+            await self.conf.set_raw('counter', guild_id, 'yesterday', value=await self.conf.get_raw('counter', guild_id, 'today'))
+            await self.conf.set_raw('counter', guild_id, 'today', value={}})
+            log_roll_date="{}.{}.{} {}:{}".format(
+                now.day, now.month, now.year, 5, 0)
+            await self.conf.set_raw('counter', guild_id, 'roll_date', value=log_roll_date)
 
-    @commands.command(pass_context=True, no_pm=True)
+    @commands.command(no_pm=True)
     async def roll_counter(self, ctx, *text):
         """
         Displays statistics of imroll command usage (or it's abuse).
         """
-        server = ctx.message.server
-        if server.id not in self.counter:
-            await self.bot.say(self.get_random_string("stats_empty"))
+        guild=ctx.message.guild
+        if guild.id not in await self.conf.get_raw('counter'):
+            await self.ctx.send(self.get_random_string("stats_empty"))
         else:
-            await self.log_roll(server.id)
-            order = ["values", "yesterday", "today"]
+            await self.log_roll(guild.id)
+            order=["values", "yesterday", "today"]
             for mode in order:
-                ovals = self.counter[server.id][mode].items()
-                vals = []
+                ovals=await self.conf.get_raw('counter', guild.id, mode).items()
+                vals=[]
                 for mtuple in ovals:
                     vals.append((mtuple[0], int(mtuple[1])))
-                names = sorted(vals, key=operator.itemgetter(1), reverse=True)
-                list_tags = ""
+                names=sorted(vals, key=operator.itemgetter(1), reverse=True)
+                list_tags=""
                 for mtuple in names:
                     list_tags += "{} - {}\n".format(mtuple[0], mtuple[1])
                 if mode is "values":
-                    await self.bot.say(self.get_random_string("stats_overall")
-                                       .format(self.counter[server.id]["date"], list_tags))
+                    await self.ctx.send(self.get_random_string("stats_overall")
+                                       .format(await self.conf.get_raw('counter', guild.id, 'date'), list_tags))
                 else:
-                    await self.bot.say(self.get_random_string("stats_daily").format(mode.title(), list_tags))
+                    await self.ctx.send(self.get_random_string("stats_daily").format(mode.title(), list_tags))
 
     async def add_roll(self, ctx):
         """
         Adds performed roll to log.
         """
         # TODO - remove code repetitions
-        server = ctx.message.server
-        if server.id not in self.bans:
-            self.bans[server.id] = self.bans["default"]
-            fileIO("data/rolls/bans.json", "save", self.bans)
-        user = ctx.message.author.name
-        now = datetime.datetime.now()
-        if server.id not in self.counter:
-            date = "{}.{}.{}".format(now.day, now.month, now.year)
-            log_roll_date = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
-            self.counter[server.id] = {"date": date, "roll_date": log_roll_date, "values": {}, "yesterday": {}, "today": {}}
-            fileIO("data/rolls/counter.json", "save", self.counter)
-            self.counter = fileIO("data/rolls/counter.json", "load")
-        if user not in self.counter[server.id]["values"]:
-            self.counter[server.id]["values"][user] = "1"
-            fileIO("data/rolls/counter.json", "save", self.counter)
+        guild=ctx.message.guild
+        if guild.id not in await self.conf.get_raw('bans'):
+            self.conf.set_raw('bans', guild.id,
+                              value=await self.conf.get_raw('bans', 'default'))
+        user=ctx.message.author.name
+        now=datetime.datetime.now()
+        if guild.id not in await self.conf.get_raw('counter'):
+            date="{}.{}.{}".format(now.day, now.month, now.year)
+            log_roll_date="{}.{}.{} {}:{}".format(
+                now.day, now.month, now.year, 5, 0)
+            await self.conf.set_raw('counter', guild.id, value={"date": date, "roll_date": log_roll_date, "values": {
+                }, "yesterday": {}, "today": {}})
+        if user not in await self.conf.get_raw('counter', guild.id, 'values'):
+            await self.conf.set_raw('counter', guild.id, 'values', user, value="1")
         else:
             # Trust me, I am engineer ^^
-            self.counter[server.id]["values"][user] = str(int(self.counter[server.id]["values"][user])+1)
-            fileIO("data/rolls/counter.json", "save", self.counter)
-        await self.log_roll(server.id)
-        if user not in self.counter[server.id]["today"]:
-            self.counter[server.id]["today"][user] = "1"
-            fileIO("data/rolls/counter.json", "save", self.counter)
+            await self.conf.set_raw('counter', guild.id, 'values', user, value=str(
+                int(await self.conf.get_raw('counter', guild.id, 'values', user))+1))
+        await self.log_roll(guild.id)
+        if user not in await self.conf.get_raw('counter', guild.id, 'today'):
+            await self.conf.set_raw('counter', guild.id, 'today', user, value="1")
         else:
             # Trust me, I am engineer ^^
-            self.counter[server.id]["today"][user] = str(int(self.counter[server.id]["today"][user])+1)
-            if int(self.counter[server.id]["today"][user]) > int(self.bans[server.id]["rules"]["daily"]):
-                if user not in self.bans[server.id]["whitelist"]:
-                    await self.bot.say(self.get_random_string("ban_given")
-                                       .format(self.bans[server.id]["rules"]["VACation"]))
-                    self.bans[server.id]["ban"][user] = "{}.{}.{} {}:{}".format(now.day, now.month, now.year, 5, 0)
-                    fileIO("data/rolls/bans.json", "save", self.bans)
+            await self.conf.set_raw('counter', guild.id, 'today', user, value=str(
+                int(await self.conf.get_raw('counter', guild.id, 'today', user))+1))
+            if int(await self.conf.get_raw('counter', guild.id, 'today', user)) > int(await self.conf.get_raw('bans', guild.id, 'rules', 'daily')):
+                if user not in await self.conf.get_raw('bans', guild.id, 'whitelist'):
+                    await self.ctx.send(await self.get_random_string("ban_given")
+                                       .format(await self.conf.get_raw('bans', guild.id,"rules","VACation")))
+                    self.conf.set_raw('bans', guild.id,"ban",user,value="{}.{}.{} {}:{}".format(
+                        now.day, now.month, now.year, 5, 0)
                 else:
-                    await self.bot.say(self.get_random_string("ban_evaded"))
-            fileIO("data/rolls/counter.json", "save", self.counter)
+                    await self.ctx.send(self.get_random_string("ban_evaded"))
     # endregion
-
-    # region Group rolls
-    @commands.command(pass_context=True, no_pm=True)
-    async def imroll(self, ctx, *text):
-        """
-        Generates set of images in ordered manner.
-        """
-        server = ctx.message.server
-        channel = ctx.message.channel
-        user = ctx.message.author.name
-        if self.active["killed"] != "True":
-            if not self.check_ban(user, server.id):
-                self.filters = fileIO("data/rolls/filters.json", "load")
-                self.settings = fileIO("data/rolls/settings.json", "load")
-                self.active = fileIO("data/rolls/active.json", "load")
-                self.counter = fileIO("data/rolls/counter.json", "load")
-                await self.add_roll(ctx)
-
-                lock = asyncio.Lock()
-                await asyncio.gather(
-                    self.image_get(ctx, server, channel, "loli", lock) if self.active["current"]["loli"] == "true" else dummy(),
-                    self.image_get(ctx, server, channel, "dan", lock) if self.active["current"]["dan"] == "true" else dummy(),
-                    self.image_get(ctx, server, channel, "gel", lock) if self.active["current"]["gel"] == "true" else dummy(),
-                    self.image_get(ctx, server, channel, "kona", lock) if self.active["current"]["kona"] == "true" else dummy(),
-                )
-            else:
-                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
-        else:
-            await self.bot.say(self.get_random_string("disabled_info"))
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def imrollf(self, ctx, *text):
-        """
-        Generates set of images in unordered manner.
-        """
-        server = ctx.message.server
-        channel = ctx.message.channel
-        user = ctx.message.author.name
-        if self.active["killed"] != "True":
-            if not self.check_ban(user, server.id):
-                self.filters = fileIO("data/rolls/filters.json", "load")
-                self.settings = fileIO("data/rolls/settings.json", "load")
-                self.active = fileIO("data/rolls/active.json", "load")
-                self.counter = fileIO("data/rolls/counter.json", "load")
-                await self.add_roll(ctx)
-
-                await asyncio.gather(
-                    self.image_get(ctx, server, channel, "loli", False, False) if self.active["current"][
-                                                                                      "loli"] == "true" else dummy(),
-                    self.image_get(ctx, server, channel, "dan", False, False) if self.active["current"][
-                                                                                     "dan"] == "true" else dummy(),
-                    self.image_get(ctx, server, channel, "gel", False, False) if self.active["current"][
-                                                                                     "gel"] == "true" else dummy(),
-                    self.image_get(ctx, server, channel, "kona", False, False) if self.active["current"][
-                                                                                      "kona"] == "true" else dummy(),
-                )
-            else:
-                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
-        else:
-            await self.bot.say(self.get_random_string("disabled_info"))
-    # endregion
-
-    # region Single rolls
-    @commands.command(pass_context=True, no_pm=True)
-    async def lolirs(self, ctx, *text):
-        """
-        Generates image form lolibooru.
-        """
-        server = ctx.message.server
-        channel = ctx.message.channel
-        user = ctx.message.author.name
-        if self.active["killed"] != "True":
-            if not self.check_ban(user, server.id):
-                self.filters = fileIO("data/rolls/filters.json", "load")
-                self.settings = fileIO("data/rolls/settings.json", "load")
-
-                await self.image_get(ctx, server, channel, "loli", False, False)
-            else:
-                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
-        else:
-            await self.bot.say(self.get_random_string("disabled_info"))
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def danrs(self, ctx, *text):
-        """
-        Generates image form danbooru.
-        """
-        server = ctx.message.server
-        channel = ctx.message.channel
-        user = ctx.message.author.name
-        if self.active["killed"] != "True":
-            if not self.check_ban(user, server.id):
-                self.filters = fileIO("data/rolls/filters.json", "load")
-                self.settings = fileIO("data/rolls/settings.json", "load")
-
-                await self.image_get(ctx, server, channel, "dan", False, False)
-            else:
-                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
-        else:
-            await self.bot.say(self.get_random_string("disabled_info"))
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def gelrs(self, ctx, *text):
-        """
-        Generates image form gelbooru.
-        """
-        server = ctx.message.server
-        channel = ctx.message.channel
-        user = ctx.message.author.name
-        if self.active["killed"] != "True":
-            if not self.check_ban(user, server.id):
-                self.filters = fileIO("data/rolls/filters.json", "load")
-                self.settings = fileIO("data/rolls/settings.json", "load")
-
-                await self.image_get(ctx, server, channel, "gel", False, False)
-            else:
-                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
-        else:
-            await self.bot.say(self.get_random_string("disabled_info"))
-
-    @commands.command(pass_context=True, no_pm=True)
-    async def konars(self, ctx, *text):
-        """
-        Generates image form konachan.
-        """
-        server = ctx.message.server
-        channel = ctx.message.channel
-        user = ctx.message.author.name
-        if self.active["killed"] != "True":
-            if not self.check_ban(user, server.id):
-                self.filters = fileIO("data/rolls/filters.json", "load")
-                self.settings = fileIO("data/rolls/settings.json", "load")
-
-                await self.image_get(ctx, server, channel, "kona", False, False)
-            else:
-                await self.bot.say(self.get_random_string("GTFO").replace("%u", user))
-        else:
-            await self.bot.say(self.get_random_string("disabled_info"))
-    # endregion
-
-    # region Configrolls
-    @commands.group(pass_context=True)
-    async def configrolls(self, ctx):
-        """
-        Displays active configuration of enabled servers.
-        """
-        if ctx.invoked_subcommand is None:
-            self.active = fileIO("data/rolls/active.json", "load")
-            await self.bot.say("```{}```".format(self.active["current"]))
-
-    async def toggle_switch(self, server):
-        """
-        Switches state of server.
-        """
-        self.active = fileIO("data/rolls/active.json", "load")
-        if self.active["current"][server] == "true":
-            self.active["current"][server] = "false"
-            await self.bot.say(self.get_random_string("sth_disabled").format(server))
-        else:
-            self.active["current"][server] = "true"
-            await self.bot.say(self.get_random_string("sth_enabled").format(server))
-        fileIO("data/rolls/active.json", "save", self.active)
-
-    @configrolls.command(name="loli", pass_context=True, no_pm=True)
-    @checks.is_owner()
-    async def _loli_switch(self, ctx, *text):
-        """
-        Toggles availability of lolibooru.
-        """
-        await self.toggle_switch("loli")
-
-    @configrolls.command(name="kona", pass_context=True, no_pm=True)
-    @checks.is_owner()
-    async def _kona_switch(self, ctx, *text):
-        """
-        Toggles availability of konachan.
-        """
-        await self.toggle_switch("kona")
-
-    @configrolls.command(name="dan", pass_context=True, no_pm=True)
-    @checks.is_owner()
-    async def _dan_switch(self, ctx, *text):
-        """
-        Toggles availability of danbooru.
-        """
-        await self.toggle_switch("dan")
-
-    @configrolls.command(name="gel", pass_context=True, no_pm=True)
-    @checks.is_owner()
-    async def _gel_switch(self, ctx, *text):
-        """
-        Toggles availability of gelbooru.
-        """
-        await self.toggle_switch("gel")
-
-    @commands.command(no_pm=True)
-    @checks.is_owner()
-    async def killswitch(self):
-        """
-        Disables all image generating functions.
-        """
-        if self.active["killed"] != "True":
-            self.active["killed"] = "True"
-            fileIO("data/rolls/active.json", "save", self.active)
-            await self.bot.say("Disabled")
-
-    @commands.command(no_pm=True)
-    @checks.is_owner()
-    async def dekillswitch(self):
-        """
-        Reenables status of image generating functions.
-        """
-        if self.active["killed"] == "True":
-            self.active["killed"] = "False"
-            fileIO("data/rolls/active.json", "save", self.active)
-            await self.bot.say("Enabled")
-    # endregion
-
-    # region Support functions
-    async def filter_add(self, ctx, server_name, tag):
-        """
-        Adds tag to list of active tags of server.
-        """
-        server = ctx.message.server
-        if server.id not in self.filters:
-            self.filters[server.id] = self.filters["default"]
-            fileIO("data/rolls/filters.json", "save", self.filters)
-            self.filters = fileIO("data/rolls/filters.json", "load")
-        if len(self.filters[server.id][server_name]) < int(self.settings["maxfilters"][server_name]):
-            if tag not in self.filters[server.id][server_name]:
-                self.filters[server.id][server_name].append(tag)
-                fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say(self.get_random_string("filter_add").format(tag, server_name))
-            else:
-                await self.bot.say(self.get_random_string("filter_exists").format(tag, server_name))
-        else:
-            await self.bot.say(self.get_random_string("filter_max").format(
-                                len(self.filters[server.id][server_name]), self.settings["maxfilters"][server_name]))
-
-    async def filter_del(self, ctx, mod, tag):
-        """
-        Deletes tag from list of selected server. Reverts to default when no tag is given.
-        """
-        server = ctx.message.server
-        if len(tag) > 0:
-            if server.id not in self.filters:
-                self.filters[server.id] = self.filters["default"]
-                fileIO("data/rolls/filters.json", "save", self.filters)
-                self.filters = fileIO("data/rolls/filters.json", "load")
-            if tag in self.filters[server.id][mod]:
-                self.filters[server.id][mod].remove(tag)
-                fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say(self.get_random_string("filter_del").format(tag, mod))
-            else:
-                await self.bot.say(self.get_random_string("filter_not_existing").format(tag, mod))
-        else:
-            if server.id in self.filters:
-                del self.filters[server.id][mod]
-                fileIO("data/rolls/filters.json", "save", self.filters)
-                await self.bot.say(self.get_random_string("filter_revert").format(mod))
-            else:
-                await self.bot.say(self.get_random_string("filter_default").format(mod))
-
-    def get_details(self, page, iterator, mode):
-        """
-        Generates embed message for image.
-        """
-        # Fetches the image ID
-        image_id = page[iterator].get('id')
-
-        # Sets the embed title
-        embed_title = self.phrases[mode]["title"].format(image_id)
-
-        # Sets the URL to be linked
-        embed_link = self.phrases[mode]["embed"].format(image_id)
-
-        # Check for the rating and set an appropriate color
-        rating = page[iterator].get('rating')
-        if rating == "s":
-            rating_color = "00FF00"
-            # rating_word = "safe"
-        elif rating == "q":
-            rating_color = "FF9900"
-            # rating_word = "questionable"
-        elif rating == "e":
-            rating_color = "FF0000"
-            # rating_word = "explicit"
-        else:
-            rating_color = "000000"
-
-        # Initialize verbose embed
-        return discord.Embed(title=embed_title, url=embed_link,
-                             colour=discord.Colour(value=int(rating_color, 16)))
-
-    async def image_get(self, ctx, server, channel, mode, lock, sync=True):
-        """
-        Fetches image from specified server, and passes result messages to specified server.
-        """
-        search_phrase = self.phrases[mode]["call"]
-        tag_list = ''
-        httpclient = aiohttp.ClientSession()
-
-        # Assign tags to URL
-        if server.id in self.filters:
-            tag_list += " ".join(self.filters[server.id][mode])
-        else:
-            tag_list += " ".join(self.filters["default"][mode])
-        search_phrase += parse.quote_plus(tag_list)
-
-        if mode is not "gel":
-            search_phrase += self.phrases[mode]["random"]
-
-        if sync:
-            await lock.acquire()
-            m1 = await self.bot.send_message(channel, self.phrases[mode]["m1"])
-            m2 = await self.bot.send_message(channel, self.phrases[mode]["m2"])
-            lock.release()
-        else:
-            m1 = await self.bot.send_message(channel, self.phrases[mode]["m1"])
-            m2 = await self.bot.send_message(channel, self.phrases[mode]["m2"])
-
-        if mode is "gel":
-            # region Gelbooru
-            try:
-                # Fetch the xml page to randomize the results
-                async with httpclient.get(search_phrase, headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
-                    website = await r.text()
-
-                # Gets the amount of results
-                count_start = website.find("count=\"")
-                count_end = website.find("\"", count_start + 7)
-                count = website[count_start + 7:count_end]
-
-                # Picks a random page and sets the search URL to json
-                pid = str(random.randint(0, int(count)))
-                search_phrase += "&json=1&pid={}".format(pid)
-                # Fetches the json page
-                async with httpclient.get(search_phrase,
-                                          headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
-                    page = await r.json()
-                if page:
-                    # Sets the image URL
-                    image_url = "{}".format(website[0]['file_url'])
-
-                    output = self.get_details(page, 0, mode)
-
-                    # Edits the pending message with the results
-                    await self.bot.edit_message(m1, self.get_random_string("m1")
-                                                .format(ctx.message.author.name), embed=output)
-                    await self.bot.edit_message(m2, self.get_random_string("m2")
-                                                .format(ctx.message.author.name, image_url))
-                else:
-                    await self.bot.edit_message(m1, self.get_random_string("no_response"))
-            except:
-                mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, self.get_random_string("request_error").format(tb.tb_lineno))
-            # endregion
-        elif mode is "dan":
-            # region Danbooru
-            try:
-                async with httpclient.get(search_phrase,
-                                          headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as d:
-                    page = await d.json()
-                if page:
-                    if "success" not in page:
-                        fuse = 0
-                        for index in range(len(page)):  # Goes through each result until it finds one that works
-                            if "file_url" in page[index]:
-                                # Sets the image URL
-                                url = page[index].get('file_url')
-                                # Hack around two different versions of image link.
-                                if url[0] is 'h':
-                                    image_url = url
-                                else:
-                                    image_url = "https://danbooru.donmai.us{}".format(url)
-
-                                output = self.get_details(page, index, mode)
-
-                                # Edits the pending message with the results
-                                await self.bot.edit_message(m1, self.get_random_string("m1")
-                                                            .format(ctx.message.author.name), embed=output)
-                                await self.bot.edit_message(m2, self.get_random_string("m2")
-                                                            .format(ctx.message.author.name, image_url))
-                                fuse = 1
-                                break
-                        if fuse == 0:
-                            await self.bot.edit_message(m1, self.get_random_string("no_result"))
-                    else:
-                        # Edits the pending message with an error received by the server
-                        await self.bot.edit_message(m1, "{}".format(page["message"]))
-                else:
-                    await self.bot.edit_message(m1, self.get_random_string("no_response"))
-            except:
-                mtype, obj, tb = sys.exc_info()
-                await self.bot.edit_message(m1, self.get_random_string("request_error").format(tb.tb_lineno))
-            # endregion
-        else:
-            # region Lolibooru / Konachan
-            try:
-                async with httpclient.get(search_phrase,
-                                          headers={'User-Agent': "blali733-cogs (https://git.io/vpCIl)"}) as r:
-                    page = await r.json()
-                if page:
-                    # Sets the image URL
-                    image_url = page[0].get("file_url").replace(' ', '+')
-
-                    output = self.get_details(page, 0, mode)
-
-                    # Edits the pending messages with the results
-                    await self.bot.edit_message(m1, self.get_random_string("m1").format(ctx.message.author.name),
-                                                embed=output)
-                    await self.bot.edit_message(m2, self.get_random_string("m2").format(ctx.message.author.name,
-                                                                                        image_url))
-                else:
-                    return await self.bot.edit_message(m1, self.get_random_string("no_response"))
-            except:
-                mtype, obj, tb = sys.exc_info()
-                return await self.bot.edit_message(m1, self.get_random_string("request_error").format(tb.tb_lineno))
-            # endregion
-    # endregion
-
-
-async def dummy():
-    """
-    Permanently bugless function - does nothing.
-    """
-    pass
-
-
-def check_folder():
-    """
-    Checks if data directory exists and creates it if necessary.
-    """
-    if not os.path.exists("data/rolls"):
-        print("Creating data/rolls folder...")
-        os.makedirs("data/rolls")
-
-
-def check_files():
-    """
-    Creates data files.
-    """
-    now = datetime.datetime.now()
-    date = "{}.{}.{}".format(now.day, now.month, now.year)
-    filters = {"default": {"loli": ["rating:safe"], "gel": ["rating:safe"], "dan": ["rating:safe"],
-                           "kona": ["rating:safe"]}}
-    settings = {"maxfilters": {"loli": "50", "gel": "10", "dan": "50", "kona": "50"}}
-    activity = {"current": {"loli": "true", "kona": "true", "gel": "false", "dan": "true"},
-                "killed": "False"}
-    counter = {"default": {"date": date}}
-    banned = {"default": {"ban": {}, "whitelist": [], "rules": {"daily": "50", "VACation": "7"}}}
-
-    # region File checking
-    if not fileIO("data/rolls/filters.json", "check"):
-        print("Creating default filters.json...")
-        fileIO("data/rolls/filters.json", "save", filters)
-    else:
-        filterlist = fileIO("data/rolls/filters.json", "load")
-        if "default" not in filterlist:
-            filterlist["default"] = filters["default"]
-            print("Adding default filters...")
-            fileIO("data/rolls/filters.json", "save", filterlist)
-    if not fileIO("data/rolls/settings.json", "check"):
-        print("Creating default settings.json...")
-        fileIO("data/rolls/settings.json", "save", settings)
-    if not fileIO("data/rolls/active.json", "check"):
-        print("Creating default active.json...")
-        fileIO("data/rolls/active.json", "save", activity)
-    if not fileIO("data/rolls/counter.json", "check"):
-        print("Creating default counter.json...")
-        fileIO("data/rolls/counter.json", "save", counter)
-    if not fileIO("data/rolls/bans.json", "check"):
-        print("Creating default bans.json...")
-        fileIO("data/rolls/bans.json", "save", banned)
-    # endregion
-
-
-def update_strings():
-    """
-    Creates and updates content of strings file.
-    """
-    strings = {
-        "disabled_info": ["I am out of order, sorry ;("],
-        "no_response": ["Server gave no response."],
-        "m1": ["As requested by: {}"],
-        "m2": ["{}: {}"],
-        "request_error": ["Error during request processing. Exception raised in line: {}"],
-        "no_result": ["Cannot find an image that can be viewed by you."],
-        "filter_add": ["Filter '{}' added to the server's {} filter list."],
-        "filter_exists": ["Filter '{}' is already in the server's {} filter list."],
-        "filter_max": ["This server has exceeded the maximum filters ({}/{})."],
-        "filter_del": ["Filter '{}' deleted from the server's {} filter list."],
-        "filter_not_existing": ["Filter '{}' does not exist in the server's {} filter list."],
-        "filter_revert": ["Reverted the server to the default {} filter list."],
-        "filter_default": ["Server is already using the default {} filter list."],
-        "filter_list": ["{} filter list: ```\n{}```"],
-        "filter_no_custom": ["No custom filters found!"],
-        "filter_found": ["{} filters not found!"],
-        "filter_no_module": ["{} module not found!"],
-        "sth_disabled": ["{} - disabled!"],
-        "sth_enabled": ["{} - enabled!"],
-        "GTFO": ["You are banned!"],
-        "ban_given": ["You are banned for next {} day(s)"],
-        "ban_evaded": ["Your reputation lets you avoid punishment."],
-        "stats_empty": ["No statistics for this server."],
-        "stats_overall": ["Since {}, following users rolled: ```\n👑{}```"],
-        "stats_daily": ["{}: ```\n👑{}```"],
-    }
-
-    if not fileIO("data/rolls/strings.json", "check"):
-        print("Creating default strings.json...")
-        fileIO("data/rolls/strings.json", "save", strings)
-    else:
-        print("Updating strings.json...")
-        file_strings = fileIO("data/rolls/strings.json", "load")
-        for key in strings:
-            if key not in file_strings:
-                file_strings[key] = strings[key]
-        fileIO("data/rolls/strings.json", "save", file_strings)
-
-
-def setup(bot):
-    """
-    Sets up cog to work properly.
-    """
-    check_folder()
-    check_files()
-    update_strings()
-    bot.add_cog(ImRoll(bot))
